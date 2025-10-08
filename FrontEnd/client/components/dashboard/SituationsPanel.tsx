@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 export type SituationPriority = "Low" | "Moderate" | "High" | "Critical";
 
@@ -39,23 +50,48 @@ interface SituationsPanelProps {
   situations: SituationRecord[];
   onStatusChange?: (situationId: number, status: string) => void;
   onDeleteSituation?: (situationId: number) => void;
+  onEditSituation?: (situationId: number, updates: Partial<SituationRecord>) => void;
 }
 
-export function SituationsPanel({ situations, onStatusChange, onDeleteSituation }: SituationsPanelProps) {
+export function SituationsPanel({ situations, onStatusChange, onDeleteSituation, onEditSituation }: SituationsPanelProps) {
+  const [editingSituation, setEditingSituation] = useState<SituationRecord | null>(null);
+  const [editForm, setEditForm] = useState<Partial<SituationRecord>>({});
+
+  const handleEditClick = (situation: SituationRecord) => {
+    setEditingSituation(situation);
+    setEditForm({
+      code: situation.code,
+      title: situation.title,
+      location: situation.location,
+      leadUnit: situation.leadUnit,
+      channel: situation.channel,
+      priority: situation.priority,
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingSituation && onEditSituation) {
+      onEditSituation(editingSituation.id, editForm);
+      setEditingSituation(null);
+      setEditForm({});
+    }
+  };
+
   return (
+    <>
     <div className="rounded-[28px] border border-border/40 bg-card/80 shadow-panel backdrop-blur">
       <div className="flex items-center justify-between gap-3 border-b border-border/40 px-6 py-6">
         <div>
           <p className="text-[0.65rem] uppercase tracking-[0.28em] text-muted-foreground">
-            Situations
+            Ситуации
           </p>
-          <h2 className="text-xl font-semibold text-foreground">Tactical overview</h2>
+          <h2 className="text-xl font-semibold text-foreground">Тактический обзор</h2>
         </div>
         <Badge
           variant="outline"
           className="border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary"
         >
-          {situations.length} active
+          {situations.length} активных
         </Badge>
       </div>
       <div className="space-y-4 px-6 py-5">
@@ -98,6 +134,14 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation 
                 >
                   {situation.priority}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => handleEditClick(situation)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             <div className="grid gap-4 text-xs text-muted-foreground sm:grid-cols-2">
@@ -148,6 +192,84 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation 
           </div>
         )}
       </div>
+
+      {/* Edit Situation Dialog */}
+      <Dialog open={!!editingSituation} onOpenChange={(open) => !open && setEditingSituation(null)}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Редактировать детали ситуации</DialogTitle>
+            <DialogDescription>
+              Обновите информацию о ситуации. Нажмите сохранить, когда закончите.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="code">Код</Label>
+              <Input
+                id="code"
+                value={editForm.code || ""}
+                onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="title">Название</Label>
+              <Input
+                id="title"
+                value={editForm.title || ""}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="location">Местоположение</Label>
+              <Input
+                id="location"
+                value={editForm.location || ""}
+                onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="leadUnit">Главный юнит</Label>
+              <Input
+                id="leadUnit"
+                value={editForm.leadUnit || ""}
+                onChange={(e) => setEditForm({ ...editForm, leadUnit: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="channel">Канал</Label>
+              <Input
+                id="channel"
+                value={editForm.channel || ""}
+                onChange={(e) => setEditForm({ ...editForm, channel: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Приоритет</Label>
+              <Select
+                value={editForm.priority || "Moderate"}
+                onValueChange={(value) => setEditForm({ ...editForm, priority: value as SituationPriority })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Moderate">Moderate</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSituation(null)}>
+              Отмена
+            </Button>
+            <Button onClick={handleSaveEdit}>Сохранить изменения</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+    </>
   );
 }

@@ -35,3 +35,5 @@
 {"ts":"2025-10-08T10:48:57.7343798Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1267.2236,"y":-2001.4135}}
 {"ts":"2025-10-08T10:48:59.7754526Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1269.3049,"y":-2003.486}}
 {"ts":"2025-10-08T10:56:32.1630563Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1274.4077,"y":-2006.6243}}
+{"ts":"2025-10-08T14:04:19.6149746Z","ev":{"type":"unit_create","id":"d5615a76-4fd0-4afb-bfdf-133ac867e094","Name":"","Marking":"L-14","playerNick":"Frank_kuznesov","IsLeadUnit":false}}
+{"ts":"2025-10-08T14:17:42.2609833Z","ev":{"type":"unit_create","id":"4e3080c5-150f-4990-9583-8a0f95e6ea4f","Name":"","Marking":"L12","playerNick":"Frank Kuznesov","IsLeadUnit":false}}

@@ -99,7 +99,7 @@ export function OperationsMap({ players, assignments, situations }: OperationsMa
             Tactical overview
           </p>
           <h2 className="text-xl font-semibold text-foreground">
-            Situations
+            Ситуации
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-3 text-xs">

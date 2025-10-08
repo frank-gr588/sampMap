@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SaMapViewer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+0b811876419c778b92563f2c1fb5e08e7535c051")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f4f2195d5b3dd97a7fa3ffcd674f741f3bf6e88a")]
 [assembly: System.Reflection.AssemblyProductAttribute("SaMapViewer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SaMapViewer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
