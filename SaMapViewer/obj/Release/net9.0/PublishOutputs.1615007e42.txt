@@ -1,0 +1,7 @@
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\SaMapViewer.exe
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\appsettings.Development.json
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\appsettings.json
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\SaMapViewer.dll
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\SaMapViewer.deps.json
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\SaMapViewer.runtimeconfig.json
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\publish\SaMapViewer.pdb

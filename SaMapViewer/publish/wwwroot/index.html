@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>SA Map Viewer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <style>
+        #map { width: 100vw; height: 100vh; }
+        .leaflet-popup-content { font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@7.0.5/dist/browser/signalr.min.js"></script>
+    <script>
+        // Константы карты
+        const MAP_WIDTH = 6000, MAP_HEIGHT = 6000;
+        const GAME_MIN = -3000, GAME_MAX = 3000;
+
+        // Преобразование игровых координат в пиксели карты
+        function gameToLatLng(x, y) {
+            // y в GTA SA - это север-юг (ось), x - запад-восток
+            // Leaflet использует [y, x] (lat, lng), но у нас просто px
+            let px = ((x - GAME_MIN) / (GAME_MAX - GAME_MIN)) * MAP_WIDTH;
+            let py = MAP_HEIGHT - (((y - GAME_MIN) / (GAME_MAX - GAME_MIN)) * MAP_HEIGHT);
+            // переводим пиксели в геокоординаты imageOverlay
+            return map.unproject([px, py], map.getMaxZoom());
+        }
+
+        // Создаём карту
+        var map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: -2,
+            maxZoom: 2
+        });
+
+        var bounds = [[0,0], [MAP_HEIGHT, MAP_WIDTH]];
+        var image = L.imageOverlay('sa_map.png', bounds).addTo(map);
+        map.fitBounds(bounds);
+
+        // Маркеры игроков
+        let playerMarkers = {};
+
+        function updateMarker(nick, x, y) {
+            let latlng = gameToLatLng(x, y);
+            if (playerMarkers[nick]) {
+                playerMarkers[nick].setLatLng(latlng);
+            } else {
+                playerMarkers[nick] = L.marker(latlng)
+                    .addTo(map)
+                    .bindPopup(`<b>${nick}</b>`);
+            }
+            playerMarkers[nick]._lastUpdate = Date.now();
+        }
+
+        // Удалять устаревшие маркеры (10 сек)
+        setInterval(() => {
+            const now = Date.now();
+            for (const [nick, marker] of Object.entries(playerMarkers)) {
+                if (now - (marker._lastUpdate || 0) > 10000) {
+                    map.removeLayer(marker);
+                    delete playerMarkers[nick];
+                }
+            }
+        }, 3000);
+
+        // Загрузка всех игроков при старте
+        fetch('/api/coords/all')
+            .then(r => r.json())
+            .then(players => {
+                for (const p of players) {
+                    updateMarker(p.nick, p.x, p.y);
+                }
+            });
+
+        // SignalR
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/coordshub")
+            .build();
+
+        connection.on("UpdatePlayer", data => {
+            updateMarker(data.nick, data.x, data.y);
+        });
+
+        connection.start();
+    </script>
+</body>
+</html>
