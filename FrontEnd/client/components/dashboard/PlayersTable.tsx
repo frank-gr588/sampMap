@@ -111,15 +111,15 @@ export function PlayersTable({
       <div className="flex flex-col gap-5 border-b border-border/40 px-6 py-6">
         <div className="flex flex-col gap-2">
           <p className="text-[0.65rem] uppercase tracking-[0.28em] text-muted-foreground">
-            Active roster
+            Активный состав
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl font-semibold text-foreground">Units</h2>
+            <h2 className="text-xl font-semibold text-foreground">Юниты</h2>
             <Badge
               variant="outline"
               className="border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary"
             >
-              {players.length} online
+              {players.length} онлайн
             </Badge>
           </div>
         </div>
@@ -128,17 +128,17 @@ export function PlayersTable({
             <Input
               value={searchTerm}
               onChange={(event) => onSearchTermChange(event.target.value)}
-              placeholder="Search nicknames or call signs"
+              placeholder="Поиск по никнеймам или позывным"
               className="h-11 border-border/40 bg-background/70 pr-10"
             />
             <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
           <Select value={statusFilter} onValueChange={onStatusFilterChange}>
             <SelectTrigger className="h-11 w-full border-border/40 bg-background/70 sm:w-[200px]">
-              <SelectValue placeholder="All statuses" />
+              <SelectValue placeholder="Все статусы" />
             </SelectTrigger>
             <SelectContent className="bg-card/95 text-foreground">
-              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="all">Все статусы</SelectItem>
               {statuses.map((status) => (
                 <SelectItem key={status} value={status}>
                   {status}
@@ -191,7 +191,7 @@ export function PlayersTable({
             </div>
             <div className="flex flex-col gap-3 lg:w-64">
               <label className="text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">
-                Status
+                Статус
               </label>
               <div className="flex gap-2">
                 <Select
@@ -234,14 +234,14 @@ export function PlayersTable({
       <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
-            <DialogTitle>Edit Unit Details</DialogTitle>
+            <DialogTitle>Редактировать данные юнита</DialogTitle>
             <DialogDescription>
-              Update the unit's information. Click save when you're done.
+              Обновите информацию о юните. Нажмите сохранить, когда закончите.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="nickname">Nickname</Label>
+              <Label htmlFor="nickname">Никнейм</Label>
               <Input
                 id="nickname"
                 value={editForm.nickname || ""}
@@ -249,7 +249,7 @@ export function PlayersTable({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="callSign">Call Sign</Label>
+              <Label htmlFor="callSign">Позывной</Label>
               <Input
                 id="callSign"
                 value={editForm.callSign || ""}
@@ -257,7 +257,7 @@ export function PlayersTable({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="channel">Channel</Label>
+              <Label htmlFor="channel">Канал</Label>
               <Input
                 id="channel"
                 value={editForm.channel || ""}
@@ -265,7 +265,7 @@ export function PlayersTable({
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="comment">Comment</Label>
+              <Label htmlFor="comment">Комментарий</Label>
               <Input
                 id="comment"
                 value={editForm.comment || ""}
@@ -291,9 +291,9 @@ export function PlayersTable({
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingPlayer(null)}>
-              Cancel
+              Отмена
             </Button>
-            <Button onClick={handleSaveEdit}>Save changes</Button>
+            <Button onClick={handleSaveEdit}>Сохранить изменения</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

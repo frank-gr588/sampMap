@@ -83,15 +83,15 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
       <div className="flex items-center justify-between gap-3 border-b border-border/40 px-6 py-6">
         <div>
           <p className="text-[0.65rem] uppercase tracking-[0.28em] text-muted-foreground">
-            Situations
+            Ситуации
           </p>
-          <h2 className="text-xl font-semibold text-foreground">Tactical overview</h2>
+          <h2 className="text-xl font-semibold text-foreground">Тактический обзор</h2>
         </div>
         <Badge
           variant="outline"
           className="border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary"
         >
-          {situations.length} active
+          {situations.length} активных
         </Badge>
       </div>
       <div className="space-y-4 px-6 py-5">
@@ -197,14 +197,14 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
       <Dialog open={!!editingSituation} onOpenChange={(open) => !open && setEditingSituation(null)}>
         <DialogContent className="sm:max-w-[525px]">
           <DialogHeader>
-            <DialogTitle>Edit Situation Details</DialogTitle>
+            <DialogTitle>Редактировать детали ситуации</DialogTitle>
             <DialogDescription>
-              Update the situation's information. Click save when you're done.
+              Обновите информацию о ситуации. Нажмите сохранить, когда закончите.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="code">Code</Label>
+              <Label htmlFor="code">Код</Label>
               <Input
                 id="code"
                 value={editForm.code || ""}
@@ -212,7 +212,7 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Название</Label>
               <Input
                 id="title"
                 value={editForm.title || ""}
@@ -220,7 +220,7 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="location">Location</Label>
+              <Label htmlFor="location">Местоположение</Label>
               <Input
                 id="location"
                 value={editForm.location || ""}
@@ -228,7 +228,7 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="leadUnit">Lead Unit</Label>
+              <Label htmlFor="leadUnit">Главный юнит</Label>
               <Input
                 id="leadUnit"
                 value={editForm.leadUnit || ""}
@@ -236,7 +236,7 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="channel">Channel</Label>
+              <Label htmlFor="channel">Канал</Label>
               <Input
                 id="channel"
                 value={editForm.channel || ""}
@@ -244,7 +244,7 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="priority">Priority</Label>
+              <Label htmlFor="priority">Приоритет</Label>
               <Select
                 value={editForm.priority || "Moderate"}
                 onValueChange={(value) => setEditForm({ ...editForm, priority: value as SituationPriority })}
@@ -263,9 +263,9 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation,
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditingSituation(null)}>
-              Cancel
+              Отмена
             </Button>
-            <Button onClick={handleSaveEdit}>Save changes</Button>
+            <Button onClick={handleSaveEdit}>Сохранить изменения</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

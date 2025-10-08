@@ -12,13 +12,15 @@ namespace SaMapViewer.Services
         private readonly ConcurrentDictionary<string, HashSet<string>> _nickToTags = new(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _nickToBaseStatus = new(StringComparer.OrdinalIgnoreCase);
         private readonly PlayerTrackerService _tracker;
+        private readonly UnitsService _unitsService;
 
-        public SituationsService(PlayerTrackerService tracker)
+        public SituationsService(PlayerTrackerService tracker, UnitsService unitsService)
         {
             _tracker = tracker;
+            _unitsService = unitsService;
         }
 
-        public Situation Create(string type, Dictionary<string, string> metadata)
+        public Situation Create(string type, Dictionary<string, string>? metadata = null)
         {
             var sit = new Situation
             {
@@ -30,18 +32,139 @@ namespace SaMapViewer.Services
             return sit;
         }
 
-        public bool TryGet(Guid id, out Situation situation) => _situations.TryGetValue(id, out situation);
+        public Situation? GetSituation(Guid id)
+        {
+            _situations.TryGetValue(id, out var situation);
+            return situation;
+        }
+
+        public bool TryGet(Guid id, out Situation? situation) => _situations.TryGetValue(id, out situation);
 
         public List<Situation> GetAll() => _situations.Values.OrderBy(s => s.CreatedAt).ToList();
 
-        public void RemoveIfEmpty(Guid id)
+        public List<Situation> GetActiveSituations() => _situations.Values.Where(s => s.IsActive).OrderBy(s => s.CreatedAt).ToList();
+
+        public void RemoveSituation(Guid id)
         {
-            if (_situations.TryGetValue(id, out var s) && s.Participants.Count == 0)
+            if (_situations.TryGetValue(id, out var situation))
             {
+                // Освобождаем все юниты от ситуации
+                foreach (var unitId in situation.Units.ToList())
+                {
+                    RemoveUnitFromSituation(id, unitId);
+                }
+                
                 _situations.TryRemove(id, out _);
             }
         }
 
+        public void CloseSituation(Guid id)
+        {
+            if (_situations.TryGetValue(id, out var situation))
+            {
+                situation.IsActive = false;
+                
+                // Освобождаем все юниты от ситуации
+                foreach (var unitId in situation.Units.ToList())
+                {
+                    RemoveUnitFromSituation(id, unitId);
+                }
+            }
+        }
+
+        public void AddUnitToSituation(Guid situationId, Guid unitId, bool asLeadUnit = false)
+        {
+            if (!_situations.TryGetValue(situationId, out var situation))
+                throw new ArgumentException($"Situation {situationId} not found");
+
+            var unit = _unitsService.GetUnit(unitId);
+            if (unit == null)
+                throw new ArgumentException($"Unit {unitId} not found");
+
+            // Если юнит уже на другой ситуации, снимаем его с неё
+            if (unit.SituationId.HasValue && unit.SituationId != situationId)
+            {
+                RemoveUnitFromSituation(unit.SituationId.Value, unitId);
+            }
+
+            // Проверяем, нужно ли автоматически сделать supervisor lead unit
+            var leadPlayerNick = _unitsService.GetLeadPlayerNick(unitId);
+            var player = !string.IsNullOrEmpty(leadPlayerNick) ? _tracker.GetPlayer(leadPlayerNick) : null;
+            bool shouldBeLead = asLeadUnit || 
+                               (player?.Role == PlayerRole.Supervisor || player?.Role == PlayerRole.SuperSupervisor);
+
+            situation.AddUnit(unitId, shouldBeLead);
+            _unitsService.AttachToSituation(unitId, situationId);
+
+            if (shouldBeLead)
+            {
+                _unitsService.SetLeadUnit(unitId, true);
+            }
+        }
+
+        public void RemoveUnitFromSituation(Guid situationId, Guid unitId)
+        {
+            if (_situations.TryGetValue(situationId, out var situation))
+            {
+                situation.RemoveUnit(unitId);
+                _unitsService.AttachToSituation(unitId, null);
+                _unitsService.SetLeadUnit(unitId, false);
+
+                // Если ситуация стала пустой, может быть её стоит закрыть (но не удалять автоматически)
+                if (situation.Units.Count == 0)
+                {
+                    // Логика на усмотрение - можно добавить автозакрытие
+                }
+            }
+        }
+
+        public void SetLeadUnit(Guid situationId, Guid unitId)
+        {
+            if (_situations.TryGetValue(situationId, out var situation))
+            {
+                situation.SetLeadUnit(unitId);
+                _unitsService.SetLeadUnit(unitId, true);
+                
+                // Убираем lead статус у других юнитов в этой ситуации
+                foreach (var otherUnitId in situation.GreenUnits)
+                {
+                    _unitsService.SetLeadUnit(otherUnitId, false);
+                }
+            }
+        }
+
+        public List<Unit> GetUnitsInSituation(Guid situationId)
+        {
+            if (!_situations.TryGetValue(situationId, out var situation))
+                return new List<Unit>();
+
+            return situation.Units
+                .Select(unitId => _unitsService.GetUnit(unitId))
+                .Where(unit => unit != null)
+                .ToList()!;
+        }
+
+        public Unit? GetLeadUnit(Guid situationId)
+        {
+            if (_situations.TryGetValue(situationId, out var situation) && situation.LeadUnitId.HasValue)
+            {
+                return _unitsService.GetUnit(situation.LeadUnitId.Value);
+            }
+            return null;
+        }
+
+        public List<Unit> GetGreenUnits(Guid situationId)
+        {
+            if (!_situations.TryGetValue(situationId, out var situation))
+                return new List<Unit>();
+
+            return situation.GreenUnits
+                .Select(unitId => _unitsService.GetUnit(unitId))
+                .Where(unit => unit != null)
+                .ToList()!;
+        }
+
+        // Оставляем старые методы для обратной совместимости с Players
         public void SetBaseStatus(string nick, string baseStatus)
         {
             _nickToBaseStatus[nick] = baseStatus ?? "ничего";
@@ -54,21 +177,22 @@ namespace SaMapViewer.Services
             else RemoveTag(nick, "PANIC");
         }
 
+        [Obsolete("Use AddUnitToSituation instead")]
         public void Join(Guid id, string nick)
         {
+            // Оставлено для совместимости, но рекомендуется использовать Units
             if (!_situations.TryGetValue(id, out var s)) return;
-            s.Participants.Add(nick);
             var tag = GetTagForSituation(s);
             if (!string.IsNullOrEmpty(tag)) AddTag(nick, tag);
         }
 
+        [Obsolete("Use RemoveUnitFromSituation instead")]
         public void Leave(Guid id, string nick)
         {
+            // Оставлено для совместимости, но рекомендуется использовать Units
             if (!_situations.TryGetValue(id, out var s)) return;
-            s.Participants.Remove(nick);
             var tag = GetTagForSituation(s);
             if (!string.IsNullOrEmpty(tag)) RemoveTag(nick, tag);
-            RemoveIfEmpty(id);
         }
 
         private void AddTag(string nick, string tag)

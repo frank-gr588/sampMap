@@ -8,9 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<PlayerTrackerService>();
+builder.Services.AddSingleton<UnitsService>();
 builder.Services.AddSingleton<SituationsService>();
 builder.Services.AddSingleton<HistoryService>();
-builder.Services.AddSingleton<UnitsService>();
 builder.Services.AddSingleton<TacticalChannelsService>();
 builder.Services.Configure<SaOptions>(builder.Configuration.GetSection("SaMap"));
 

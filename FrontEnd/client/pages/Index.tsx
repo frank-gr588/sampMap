@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { apiGet } from "@/lib/utils";
 import type { PlayerPointDto } from "@shared/api";
 import {
@@ -11,172 +11,65 @@ import {
 } from "@/components/dashboard/SituationsPanel";
 import { OperationsMap } from "@/components/dashboard/OperationsMap";
 import { AssignmentBoard } from "@/components/dashboard/AssignmentBoard";
+import { ManagementDashboard } from "@/components/dashboard/ManagementDashboard";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertTriangle,
   Coffee,
   Radio,
   ShieldCheck,
+  Settings,
+  Users,
+  MapPin,
 } from "lucide-react";
 
 const initialPlayers: PlayerRecord[] = [
   {
     id: 1,
-    nickname: "Aurora",
-    callSign: "A-21",
-    status: "On Patrol",
-    comment: "North freeway sweep complete, staging near Bay City.",
-    channel: "TAC 1",
-    lastUpdate: "2m ago",
+    nickname: "Аврора",
+    callSign: "А-21",
+    status: "Патруль",
+    comment: "Зачистка северной магистрали завершена, дислокация у Бей-Сити.",
+    channel: "ТАК 1",
+    lastUpdate: "2 мин назад",
     priority: "Routine",
     location: { x: 62, y: 28 },
   },
   {
     id: 2,
-    nickname: "Fury",
-    callSign: "P-18",
-    status: "Pursuit",
-    comment: "High speed pursuit southbound Del Perro, requesting air.",
-    channel: "TAC 3",
-    lastUpdate: "Just now",
+    nickname: "Фурия",
+    callSign: "П-18",
+    status: "Преследование",
+    comment: "Высокоскоростная погоня на юг Дель-Перро, запрос воздушной поддержки.",
+    channel: "ТАК 3",
+    lastUpdate: "Сейчас",
     priority: "Critical",
     location: { x: 84, y: 44 },
-  },
-  {
-    id: 3,
-    nickname: "Beacon",
-    callSign: "M-05",
-    status: "Code 7",
-    comment: "15-minute refuel at Rockford HQ.",
-    channel: "CMD",
-    lastUpdate: "4m ago",
-    priority: "Elevated",
-    location: { x: 24, y: 64 },
-  },
-  {
-    id: 4,
-    nickname: "Atlas",
-    callSign: "S-32",
-    status: "Traffic Stop",
-    comment: "Blue sedan, possible 10-55, backup requested.",
-    channel: "TAC 2",
-    lastUpdate: "1m ago",
-    priority: "Elevated",
-    location: { x: 48, y: 58 },
-  },
-  {
-    id: 5,
-    nickname: "Vega",
-    callSign: "R-14",
-    status: "Staged",
-    comment: "Perimeter west of Mission Row, holding K9.",
-    channel: "TAC 4",
-    lastUpdate: "6m ago",
-    priority: "Routine",
-    location: { x: 18, y: 32 },
-  },
-  {
-    id: 6,
-    nickname: "Orbit",
-    callSign: "A-42",
-    status: "Recon",
-    comment: "Thermal sweep over Blaine County ridge.",
-    channel: "AIR",
-    lastUpdate: "3m ago",
-    priority: "Routine",
-    location: { x: 72, y: 68 },
-  },
-  {
-    id: 7,
-    nickname: "Halo",
-    callSign: "M-29",
-    status: "Support",
-    comment: "Medic staging at Del Perro interchange.",
-    channel: "MED",
-    lastUpdate: "5m ago",
-    priority: "Elevated",
-    location: { x: 54, y: 82 },
-  },
-  {
-    id: 8,
-    nickname: "Sable",
-    callSign: "Q-11",
-    status: "On Patrol",
-    comment: "Checking Palomino routes, no contacts.",
-    channel: "TAC 1",
-    lastUpdate: "7m ago",
-    priority: "Routine",
-    location: { x: 36, y: 44 },
-  },
-  {
-    id: 9,
-    nickname: "Nova",
-    callSign: "U-07",
-    status: "Unassigned",
-    comment: "Awaiting briefing in operations center.",
-    channel: "CMD",
-    lastUpdate: "9m ago",
-    priority: "Routine",
-    location: { x: 66, y: 16 },
   },
 ];
 
 const initialSituations: SituationRecord[] = [
   {
     id: 1,
-    code: "Delta-41",
-    title: "Freeway pursuit — Del Perro",
-    status: "Active",
-    location: "Del Perro Fwy SB",
-    leadUnit: "Fury / P-18",
+    code: "Дельта-41",
+    title: "Погоня на магистрали — Дель-Перро",
+    status: "Активная",
+    location: "Автострада Дель-Перро ЮН",
+    leadUnit: "Фурия / П-18",
     unitsAssigned: 5,
-    channel: "TAC 3",
+    channel: "ТАК 3",
     priority: "Critical",
-    updated: "Synced 00:47 ago",
-  },
-  {
-    id: 2,
-    code: "Echo-19",
-    title: "Multi-vehicle pileup",
-    status: "Stabilizing",
-    location: "La Puerta Tunnel",
-    leadUnit: "Halo / M-29",
-    unitsAssigned: 6,
-    channel: "MED",
-    priority: "High",
-    updated: "Synced 02:11 ago",
-  },
-  {
-    id: 3,
-    code: "Bravo-07",
-    title: "Burglary in progress",
-    status: "Escalated",
-    location: "Vespucci Canals",
-    leadUnit: "Atlas / S-32",
-    unitsAssigned: 4,
-    channel: "TAC 2",
-    priority: "High",
-    updated: "Synced 05:39 ago",
-  },
-  {
-    id: 4,
-    code: "Sierra-28",
-    title: "VIP motorcade convoy",
-    status: "Monitoring",
-    location: "Vinewood Park Dr",
-    leadUnit: "Aurora / A-21",
-    unitsAssigned: 3,
-    channel: "CMD",
-    priority: "Moderate",
-    updated: "Synced 08:25 ago",
+    updated: "Синх. 00:47 назад",
   },
 ];
 
-function buildInitialAssignments(players: PlayerRecord[]) {
-  return players.reduce<Record<number, number | null>>((acc, player) => {
-    acc[player.id] = null;
-    return acc;
-  }, {});
+function buildInitialAssignments(players: PlayerRecord[]): Record<number, number | null> {
+  const assignments: Record<number, number | null> = {};
+  players.forEach((player) => {
+    assignments[player.id] = null;
+  });
+  return assignments;
 }
 
 export default function Index() {
@@ -246,7 +139,10 @@ export default function Index() {
   };
 
   const handleAssignmentChange = (playerId: number, situationId: number | null) => {
-    setAssignments((current) => ({ ...current, [playerId]: situationId }));
+    setAssignments((current) => ({
+      ...current,
+      [playerId]: situationId,
+    }));
   };
 
   const handleSituationStatusChange = (situationId: number, status: string) => {
@@ -256,7 +152,7 @@ export default function Index() {
           ? {
               ...situation,
               status,
-              updated: "Updated just now",
+              updated: "Synced just now",
             }
           : situation,
       ),
@@ -270,7 +166,7 @@ export default function Index() {
           ? {
               ...situation,
               ...updates,
-              updated: "Updated just now",
+              updated: "Synced just now",
             }
           : situation,
       ),
@@ -309,25 +205,22 @@ export default function Index() {
           id: idx + 1,
           nickname: p.nick,
           callSign: p.nick,
-          status: p.status || "On Patrol",
+          status: p.status?.toString() || "On Patrol",
           comment: "",
           channel: "TAC 1",
-          lastUpdate: new Date(p.lastUpdate || Date.now()).toLocaleTimeString(),
+          lastUpdate: new Date(p.lastUpdate || Date.now()).toLocaleTimeString('ru-RU'),
           priority: "Routine",
-          // keep percent fallback off-screen; map uses worldX/worldY if present
-          location: { x: -9999, y: -9999 },
-          worldX: p.x,
-          // Backend Y increases upwards; our projection expects same world axis
-          // If needed, invert here depending on your world bounds convention
-          worldY: p.y,
+          location: { x: p.x || 0, y: p.y || 0 },
         }));
         setPlayers(mapped);
-      } catch (e) {
-        // ignore transient errors in dev
+      } catch (error) {
+        console.warn("Failed to sync player data:", error);
       }
     };
+
+    // Load immediately
     load();
-    const id = setInterval(load, 2000);
+    const id = setInterval(load, 5000);
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
@@ -335,6 +228,8 @@ export default function Index() {
     <div className="min-h-screen bg-background text-foreground">
       <main className="relative isolate mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-6 py-10 lg:px-10">
         <div className="absolute inset-0 -z-10 bg-radial-fade opacity-80" />
+        
+        {/* Header Section */}
         <section className="relative overflow-hidden rounded-[28px] border border-border/40 bg-card/80 shadow-panel backdrop-blur">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(34,216,255,0.25),transparent_55%),radial-gradient(circle_at_100%_100%,rgba(112,71,255,0.25),transparent_60%)] opacity-80" />
           <div className="relative flex flex-col gap-8 px-6 py-8 md:px-10 md:py-10">
@@ -344,113 +239,140 @@ export default function Index() {
                   variant="outline"
                   className="border-primary/30 bg-primary/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-primary"
                 >
-                  San Andreas Dispatch
+                  Диспетчерская Сан-Андреас
                 </Badge>
                 <h1 className="text-3xl font-semibold leading-tight text-foreground md:text-4xl">
-                  Response command center for live Grand Theft Auto: San Andreas operations
+                  Командный центр реагирования для операций Grand Theft Auto: San Andreas
                 </h1>
                 <p className="text-base text-muted-foreground md:text-lg">
-                  Monitor every unit, merge map intelligence with tactical status, and coordinate support at lightning speed.
+                  Отслеживайте каждый юнит, объединяйте картографические данные с тактическим статусом и координируйте поддержку на высокой скорости.
                 </p>
               </div>
               <div className="flex flex-col items-end gap-3 text-right">
                 <span className="text-xs uppercase tracking-[0.32em] text-muted-foreground">
-                  Dispatch cycle
+                  Смена диспетчера
                 </span>
                 <span className="text-3xl font-semibold text-foreground">
-                  {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+                  {currentTime.toLocaleTimeString('ru-RU', { hour12: false })}
                 </span>
                 <span className="text-xs uppercase tracking-[0.32em] text-muted-foreground">
-                  Server time
+                  Время сервера
                 </span>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <SummaryCard
                 icon={<ShieldCheck className="h-5 w-5" />}
-                label="Active units"
+                label="Активные юниты"
                 value={activeUnits}
-                description={`${players.length} total on shift`}
+                description={`${players.length} всего на смене`}
                 accent="from-primary/25"
               />
               <SummaryCard
                 icon={<AlertTriangle className="h-5 w-5" />}
-                label="Critical calls"
+                label="Критические вызовы"
                 value={criticalCalls}
-                description="Immediate attention required"
+                description="Требуют немедленного внимания"
                 accent="from-rose-400/30"
               />
               <SummaryCard
                 icon={<Radio className="h-5 w-5" />}
-                label="Live situations"
+                label="Активные ситуации"
                 value={situations.length}
-                description="Across tactical channels"
+                description="По тактическим каналам"
                 accent="from-emerald-400/25"
               />
               <SummaryCard
                 icon={<Coffee className="h-5 w-5" />}
-                label="Code 7"
+                label="Код 7"
                 value={codeSeven}
-                description="Units on mandatory break"
+                description="Юниты на обязательном перерыве"
                 accent="from-amber-400/25"
               />
             </div>
           </div>
         </section>
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div>
-            <OperationsMap
-              players={players}
-              assignments={assignments}
-              situations={situations}
-            />
-          </div>
-          <div className="flex flex-col gap-6">
-            <SituationsPanel
-              situations={situations}
-              onStatusChange={handleSituationStatusChange}
-              onDeleteSituation={handleDeleteSituation}
-              onEditSituation={handleEditSituation}
-            />
-          </div>
-        </section>
+        {/* Main Tabs Section */}
+        <Tabs defaultValue="operations" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="operations" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              Операции
+            </TabsTrigger>
+            <TabsTrigger value="management" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Управление
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="operations" className="space-y-6">
+            <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+              <div>
+                <OperationsMap
+                  players={players}
+                  assignments={assignments}
+                  situations={situations}
+                />
+              </div>
+              <div className="flex flex-col gap-6">
+                <SituationsPanel
+                  situations={situations}
+                  onStatusChange={handleSituationStatusChange}
+                  onDeleteSituation={handleDeleteSituation}
+                  onEditSituation={handleEditSituation}
+                />
+              </div>
+            </section>
 
-        <section>
-          <AssignmentBoard
+            <section>
+              <AssignmentBoard
+                players={players}
+                situations={situations}
+                assignments={assignments}
+                onAssignmentChange={handleAssignmentChange}
+              />
+            </section>
+
+            <section className="grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+              <PlayersTable
+                players={players}
+                filteredPlayers={filteredPlayers}
+                searchTerm={searchTerm}
+                onSearchTermChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                statuses={statuses}
+                onStatusChange={handleUnitStatusChange}
+                onEditPlayer={handleEditPlayer}
+              />
+              <SituationsPanel
+                situations={situations}
+                onStatusChange={handleSituationStatusChange}
+                onDeleteSituation={handleDeleteSituation}
+                onEditSituation={handleEditSituation}
+              />
+            </section>
+          </TabsContent>
+          
+          <TabsContent value="management">
+          <ManagementDashboard
             players={players}
+            setPlayers={setPlayers}
             situations={situations}
+            setSituations={setSituations}
             assignments={assignments}
-            onAssignmentChange={handleAssignmentChange}
+            setAssignments={setAssignments}
           />
-        </section>
-
-        <section className="grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-          <PlayersTable
-            players={players}
-            filteredPlayers={filteredPlayers}
-            searchTerm={searchTerm}
-            onSearchTermChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            statuses={statuses}
-            onStatusChange={handleUnitStatusChange}
-            onEditPlayer={handleEditPlayer}
-          />
-          <SituationsPanel
-            situations={situations}
-            onStatusChange={handleSituationStatusChange}
-            onDeleteSituation={handleDeleteSituation}
-            onEditSituation={handleEditSituation}
-          />
-        </section>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
 }
 
 interface SummaryCardProps {
-  icon: ReactNode;
+  icon: React.ReactNode;
   label: string;
   value: number;
   description: string;

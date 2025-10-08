@@ -33,7 +33,7 @@ export function AssignmentBoard({
   onAssignmentChange,
 }: AssignmentBoardProps) {
   const boardRef = useRef<HTMLDivElement | null>(null);
-  const unitRefs = useRef(new Map<number, HTMLDivElement>());
+  const unitRefs = useRef(new Map<number, HTMLButtonElement>());
   const situationRefs = useRef(new Map<number, HTMLDivElement>());
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [hoveredSituation, setHoveredSituation] = useState<number | null>(null);
@@ -58,6 +58,7 @@ export function AssignmentBoard({
       event.dataTransfer.effectAllowed = "move";
       setDraggingId(playerId);
     },
+    [],
   );
 
   const handleDragEnd = useCallback(() => {
@@ -94,7 +95,7 @@ export function AssignmentBoard({
   );
 
   const setupUnitRef = useCallback(
-    (playerId: number) => (node: HTMLDivElement | null) => {
+    (playerId: number) => (node: HTMLButtonElement | null) => {
       if (!node) {
         unitRefs.current.delete(playerId);
         return;
@@ -207,15 +208,15 @@ export function AssignmentBoard({
         <section className="space-y-5">
           <header className="flex flex-col gap-2">
             <p className="text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">
-              Units dock
+              Дежурная часть
             </p>
             <div className="flex items-center gap-3">
-              <h2 className="text-lg font-semibold">Available units</h2>
+              <h2 className="text-lg font-semibold">Доступные юниты</h2>
               <Badge
                 variant="outline"
                 className="border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-primary"
               >
-                {unassignedCount} awaiting tasking
+                {unassignedCount} ожидают задание
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
@@ -272,20 +273,20 @@ export function AssignmentBoard({
             onDrop={handleDropOnUnassigned}
             className="flex min-h-[80px] items-center justify-center rounded-2xl border border-dashed border-border/40 bg-background/60 text-center text-xs text-muted-foreground"
           >
-            Drop here to clear assignment
+            Перетащите сюда для снятия назначения
           </div>
         </section>
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">Situations</p>
-              <h2 className="text-lg font-semibold">Active incidents</h2>
+              <p className="text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">Ситуации</p>
+              <h2 className="text-lg font-semibold">Активные инциденты</h2>
             </div>
             <Badge
               variant="outline"
               className="border-border/40 bg-background/70 px-3 py-1 text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground"
             >
-              Drag units onto an incident card
+              Перетащите юниты на карточку инцидента
             </Badge>
           </div>
           <div className="space-y-4">

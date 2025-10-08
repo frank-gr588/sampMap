@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SaMapViewer.Models
 {
@@ -8,12 +9,13 @@ namespace SaMapViewer.Models
         public Guid Id { get; set; } = Guid.NewGuid();
         public string Name { get; set; } = string.Empty; // Название юнита
         public string Marking { get; set; } = string.Empty; // Маркировка
-        public int PlayerCount { get; set; } = 1; // Кол-во игроков
+        public HashSet<string> PlayerNicks { get; set; } = new(StringComparer.OrdinalIgnoreCase); // Игроки в юните
+        public int PlayerCount => PlayerNicks.Count; // Количество игроков
         public string Status { get; set; } = string.Empty; // Статус (с фронта)
         public Guid? SituationId { get; set; } // Прикреплённость к ситуации
-        public bool IsRed { get; set; } // Главный юнит
-        public HashSet<string> Players { get; set; } = new(StringComparer.OrdinalIgnoreCase); // Никнеймы игроков
+        public bool IsLeadUnit { get; set; } // Ведущий юнит (red unit)
         public Guid? TacticalChannelId { get; set; } // Какой тактический канал закреплён
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
 

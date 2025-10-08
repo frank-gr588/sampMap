@@ -33,3 +33,4 @@ C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\bin\Debug\net9.0\publish\SaM
 C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\bin\Debug\net9.0\publish\SaMapViewer.runtimeconfig.json
 C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\bin\Debug\net9.0\publish\SaMapViewer.staticwebassets.endpoints.json
 C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\obj\Debug\net9.0\compressed\gpc4fhkz1q-o5xhoc0aqw.gz
+C:\Users\steph\Documents\trach\nyd\site\SaMapViewer\obj\Debug\net9.0\SaMapViewer.sourcelink.json
