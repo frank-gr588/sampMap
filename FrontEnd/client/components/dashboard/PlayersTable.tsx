@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -8,8 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import { Search } from "lucide-react";
+import { Search, Edit } from "lucide-react";
 
 export type PlayerPriority = "Routine" | "Elevated" | "Critical";
 
@@ -26,6 +37,8 @@ export interface PlayerRecord {
     x: number;
     y: number;
   };
+  worldX?: number;
+  worldY?: number;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -56,6 +69,7 @@ interface PlayersTableProps {
   onStatusFilterChange: (value: string) => void;
   statuses: string[];
   onStatusChange?: (playerId: number, status: string) => void;
+  onEditPlayer?: (playerId: number, updates: Partial<PlayerRecord>) => void;
 }
 
 export function PlayersTable({
@@ -67,8 +81,32 @@ export function PlayersTable({
   onStatusFilterChange,
   statuses,
   onStatusChange,
+  onEditPlayer,
 }: PlayersTableProps) {
+  const [editingPlayer, setEditingPlayer] = useState<PlayerRecord | null>(null);
+  const [editForm, setEditForm] = useState<Partial<PlayerRecord>>({});
+
+  const handleEditClick = (player: PlayerRecord) => {
+    setEditingPlayer(player);
+    setEditForm({
+      nickname: player.nickname,
+      callSign: player.callSign,
+      channel: player.channel,
+      comment: player.comment,
+      priority: player.priority,
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingPlayer && onEditPlayer) {
+      onEditPlayer(editingPlayer.id, editForm);
+      setEditingPlayer(null);
+      setEditForm({});
+    }
+  };
+
   return (
+    <>
     <div className="rounded-[28px] border border-border/40 bg-card/80 shadow-panel backdrop-blur">
       <div className="flex flex-col gap-5 border-b border-border/40 px-6 py-6">
         <div className="flex flex-col gap-2">
@@ -151,27 +189,37 @@ export function PlayersTable({
                 </p>
               </div>
             </div>
-            <div className="flex flex-col gap-3 lg:w-52">
+            <div className="flex flex-col gap-3 lg:w-64">
               <label className="text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">
                 Status
               </label>
-              <Select
-                value={player.status}
-                onValueChange={(value) => onStatusChange?.(player.id, value)}
-              >
-                <SelectTrigger className="h-11 border-border/40 bg-background/70">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-card/95 text-foreground">
-                  <SelectGroup>
-                    {STATUS_OPTIONS.map((status) => (
-                      <SelectItem key={status} value={status}>
-                        {status}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <Select
+                  value={player.status}
+                  onValueChange={(value) => onStatusChange?.(player.id, value)}
+                >
+                  <SelectTrigger className="h-11 border-border/40 bg-background/70">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card/95 text-foreground">
+                    <SelectGroup>
+                      {STATUS_OPTIONS.map((status) => (
+                        <SelectItem key={status} value={status}>
+                          {status}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 shrink-0"
+                  onClick={() => handleEditClick(player)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         ))}
@@ -181,6 +229,75 @@ export function PlayersTable({
           </div>
         )}
       </div>
+
+      {/* Edit Player Dialog */}
+      <Dialog open={!!editingPlayer} onOpenChange={(open) => !open && setEditingPlayer(null)}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Unit Details</DialogTitle>
+            <DialogDescription>
+              Update the unit's information. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="nickname">Nickname</Label>
+              <Input
+                id="nickname"
+                value={editForm.nickname || ""}
+                onChange={(e) => setEditForm({ ...editForm, nickname: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="callSign">Call Sign</Label>
+              <Input
+                id="callSign"
+                value={editForm.callSign || ""}
+                onChange={(e) => setEditForm({ ...editForm, callSign: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="channel">Channel</Label>
+              <Input
+                id="channel"
+                value={editForm.channel || ""}
+                onChange={(e) => setEditForm({ ...editForm, channel: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="comment">Comment</Label>
+              <Input
+                id="comment"
+                value={editForm.comment || ""}
+                onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select
+                value={editForm.priority || "Routine"}
+                onValueChange={(value) => setEditForm({ ...editForm, priority: value as PlayerPriority })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Routine">Routine</SelectItem>
+                  <SelectItem value="Elevated">Elevated</SelectItem>
+                  <SelectItem value="Critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPlayer(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+    </>
   );
 }

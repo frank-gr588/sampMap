@@ -1,8 +1,19 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 export type SituationPriority = "Low" | "Moderate" | "High" | "Critical";
 
@@ -39,10 +50,35 @@ interface SituationsPanelProps {
   situations: SituationRecord[];
   onStatusChange?: (situationId: number, status: string) => void;
   onDeleteSituation?: (situationId: number) => void;
+  onEditSituation?: (situationId: number, updates: Partial<SituationRecord>) => void;
 }
 
-export function SituationsPanel({ situations, onStatusChange, onDeleteSituation }: SituationsPanelProps) {
+export function SituationsPanel({ situations, onStatusChange, onDeleteSituation, onEditSituation }: SituationsPanelProps) {
+  const [editingSituation, setEditingSituation] = useState<SituationRecord | null>(null);
+  const [editForm, setEditForm] = useState<Partial<SituationRecord>>({});
+
+  const handleEditClick = (situation: SituationRecord) => {
+    setEditingSituation(situation);
+    setEditForm({
+      code: situation.code,
+      title: situation.title,
+      location: situation.location,
+      leadUnit: situation.leadUnit,
+      channel: situation.channel,
+      priority: situation.priority,
+    });
+  };
+
+  const handleSaveEdit = () => {
+    if (editingSituation && onEditSituation) {
+      onEditSituation(editingSituation.id, editForm);
+      setEditingSituation(null);
+      setEditForm({});
+    }
+  };
+
   return (
+    <>
     <div className="rounded-[28px] border border-border/40 bg-card/80 shadow-panel backdrop-blur">
       <div className="flex items-center justify-between gap-3 border-b border-border/40 px-6 py-6">
         <div>
@@ -98,6 +134,14 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation 
                 >
                   {situation.priority}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={() => handleEditClick(situation)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             <div className="grid gap-4 text-xs text-muted-foreground sm:grid-cols-2">
@@ -148,6 +192,84 @@ export function SituationsPanel({ situations, onStatusChange, onDeleteSituation 
           </div>
         )}
       </div>
+
+      {/* Edit Situation Dialog */}
+      <Dialog open={!!editingSituation} onOpenChange={(open) => !open && setEditingSituation(null)}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>Edit Situation Details</DialogTitle>
+            <DialogDescription>
+              Update the situation's information. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="code">Code</Label>
+              <Input
+                id="code"
+                value={editForm.code || ""}
+                onChange={(e) => setEditForm({ ...editForm, code: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={editForm.title || ""}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="location">Location</Label>
+              <Input
+                id="location"
+                value={editForm.location || ""}
+                onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="leadUnit">Lead Unit</Label>
+              <Input
+                id="leadUnit"
+                value={editForm.leadUnit || ""}
+                onChange={(e) => setEditForm({ ...editForm, leadUnit: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="channel">Channel</Label>
+              <Input
+                id="channel"
+                value={editForm.channel || ""}
+                onChange={(e) => setEditForm({ ...editForm, channel: e.target.value })}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select
+                value={editForm.priority || "Moderate"}
+                onValueChange={(value) => setEditForm({ ...editForm, priority: value as SituationPriority })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Moderate">Moderate</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSituation(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit}>Save changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+    </>
   );
 }

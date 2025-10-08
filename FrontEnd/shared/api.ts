@@ -17,6 +17,7 @@ export interface PlayerPointDto {
   x: number;
   y: number;
   status: string;
+  lastUpdate?: string;
 }
 
 export interface SituationDto {

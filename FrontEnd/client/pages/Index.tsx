@@ -187,6 +187,7 @@ export default function Index() {
   );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [currentTime, setCurrentTime] = useState(new Date());
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -230,6 +231,20 @@ export default function Index() {
     );
   };
 
+  const handleEditPlayer = (playerId: number, updates: Partial<PlayerRecord>) => {
+    setPlayers((current) =>
+      current.map((player) =>
+        player.id === playerId
+          ? {
+              ...player,
+              ...updates,
+              lastUpdate: "Just now",
+            }
+          : player,
+      ),
+    );
+  };
+
   const handleAssignmentChange = (playerId: number, situationId: number | null) => {
     setAssignments((current) => ({ ...current, [playerId]: situationId }));
   };
@@ -241,6 +256,20 @@ export default function Index() {
           ? {
               ...situation,
               status,
+              updated: "Updated just now",
+            }
+          : situation,
+      ),
+    );
+  };
+
+  const handleEditSituation = (situationId: number, updates: Partial<SituationRecord>) => {
+    setSituations((current) =>
+      current.map((situation) =>
+        situation.id === situationId
+          ? {
+              ...situation,
+              ...updates,
               updated: "Updated just now",
             }
           : situation,
@@ -261,6 +290,15 @@ export default function Index() {
     });
   };
 
+  // Real-time clock update
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Sync player coordinates from backend in real-time
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -278,7 +316,6 @@ export default function Index() {
           priority: "Routine",
           // keep percent fallback off-screen; map uses worldX/worldY if present
           location: { x: -9999, y: -9999 },
-          // @ts-expect-error - augment with world coords for OperationsMap
           worldX: p.x,
           // Backend Y increases upwards; our projection expects same world axis
           // If needed, invert here depending on your world bounds convention
@@ -321,7 +358,7 @@ export default function Index() {
                   Dispatch cycle
                 </span>
                 <span className="text-3xl font-semibold text-foreground">
-                  17:42:08
+                  {currentTime.toLocaleTimeString('en-US', { hour12: false })}
                 </span>
                 <span className="text-xs uppercase tracking-[0.32em] text-muted-foreground">
                   Server time
@@ -374,6 +411,7 @@ export default function Index() {
               situations={situations}
               onStatusChange={handleSituationStatusChange}
               onDeleteSituation={handleDeleteSituation}
+              onEditSituation={handleEditSituation}
             />
           </div>
         </section>
@@ -397,11 +435,13 @@ export default function Index() {
             onStatusFilterChange={setStatusFilter}
             statuses={statuses}
             onStatusChange={handleUnitStatusChange}
+            onEditPlayer={handleEditPlayer}
           />
           <SituationsPanel
             situations={situations}
             onStatusChange={handleSituationStatusChange}
             onDeleteSituation={handleDeleteSituation}
+            onEditSituation={handleEditSituation}
           />
         </section>
       </main>
