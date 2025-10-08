@@ -136,15 +136,15 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
         return;
       }
 
-      // Создаем юнит с первым игроком
+      // Создаем юнит со всеми выбранными игроками
       const unitToCreate = {
         Name: newUnit.name,
         Marking: newUnit.marking,
-        PlayerNick: selectedPlayerNicks[0],
+        PlayerNicks: selectedPlayerNicks,
         IsLeadUnit: newUnit.isLeadUnit
       };
 
-      const response = await fetch("/api/units", {
+      const response = await fetch("/api/unitscontrollernew", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -154,20 +154,6 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
       });
 
       if (response.ok) {
-        const unit = await response.json();
-        
-        // Добавляем остальных игроков к юниту
-        for (let i = 1; i < selectedPlayerNicks.length; i++) {
-          await fetch(`/api/units/${unit.id}/players/add`, {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "X-API-Key": "changeme-key"
-            },
-            body: JSON.stringify({ Nick: selectedPlayerNicks[i] })
-          });
-        }
-
         await fetchUnits();
         await fetchAvailablePlayers();
         setIsCreateDialogOpen(false);
@@ -190,7 +176,7 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
     try {
       const response = await fetch(`/api/unitscontrollernew/${unitId}`, {
         method: "DELETE",
-        headers: { "X-API-Key": "your-api-key" }
+        headers: { "X-API-Key": "changeme-key" }
       });
 
       if (response.ok) {
@@ -209,7 +195,7 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "X-API-Key": "your-api-key"
+          "X-API-Key": "changeme-key"
         },
         body: JSON.stringify(request)
       });
@@ -235,7 +221,7 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "X-API-Key": "your-api-key"
+          "X-API-Key": "changeme-key"
         },
         body: JSON.stringify(request)
       });
