@@ -43,13 +43,18 @@ namespace SaMapViewer.Controllers
             if (existingPlayer != null)
                 return Conflict($"Player '{request.Nick}' already exists");
 
-            var player = new PlayerPoint(request.Nick, request.X ?? 0, request.Y ?? 0);
+            // Устанавливаем координаты -10000, -10000 для игроков созданных вручную (костыль-маркер)
+            // Это позволяет отличить их от игроков созданных через скрипт SA-MP
+            var x = request.X ?? -10000f;
+            var y = request.Y ?? -10000f;
+            
+            var player = new PlayerPoint(request.Nick, x, y);
             if (request.Role.HasValue)
                 player.SetRole(request.Role.Value);
             if (request.Status.HasValue)
                 player.SetStatus(request.Status.Value);
 
-            _playerTracker.UpdatePlayer(player.Nick, player.X, player.Y);
+            _playerTracker.AddPlayer(player);
             return CreatedAtAction(nameof(GetPlayer), new { nick = player.Nick }, player);
         }
 
@@ -115,9 +120,7 @@ namespace SaMapViewer.Controllers
         [HttpGet("available-for-unit")]
         public ActionResult<IEnumerable<PlayerPoint>> GetAvailablePlayersForUnit()
         {
-            var players = _playerTracker.GetAllPlayers()
-                .Where(p => p.Status == PlayerStatus.OnDutyOutOfUnit || p.Status == PlayerStatus.OnDuty)
-                .Where(p => !p.UnitId.HasValue);
+            var players = _playerTracker.GetAvailablePlayersForUnit();
             return Ok(players);
         }
     }

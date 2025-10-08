@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace SaMapViewer.Services
 {
@@ -10,11 +11,14 @@ namespace SaMapViewer.Services
     {
         private readonly ConcurrentDictionary<string, PlayerPoint> _players = new();
         private readonly TimeSpan _timeout;
+        private readonly ILogger<PlayerTrackerService> _logger;
 
-        public PlayerTrackerService(Microsoft.Extensions.Options.IOptions<SaMapViewer.Services.SaOptions> options)
+        public PlayerTrackerService(Microsoft.Extensions.Options.IOptions<SaMapViewer.Services.SaOptions> options, ILogger<PlayerTrackerService> logger)
         {
             var seconds = Math.Max(1, options.Value.PlayerTtlSeconds);
             _timeout = TimeSpan.FromSeconds(seconds);
+            _logger = logger;
+            _logger.LogInformation("PlayerTrackerService initialized with timeout: {Timeout} seconds", seconds);
         }
 
         // Устаревший метод для совместимости с Lua скриптом
@@ -25,10 +29,17 @@ namespace SaMapViewer.Services
 
         public void UpdatePlayer(string nick, float x, float y)
         {
+            _logger.LogDebug("Updating player coordinates: {Nick} at ({X}, {Y})", nick, x, y);
+            
             _players.AddOrUpdate(nick,
-                _ => new PlayerPoint(nick, x, y),
+                _ => {
+                    _logger.LogInformation("Creating new player from script: {Nick} at ({X}, {Y})", nick, x, y);
+                    return new PlayerPoint(nick, x, y);
+                },
                 (_, existing) =>
                 {
+                    _logger.LogDebug("Updating existing player: {Nick} from ({OldX}, {OldY}) to ({NewX}, {NewY})", 
+                        nick, existing.X, existing.Y, x, y);
                     existing.Update(x, y);
                     return existing;
                 });
@@ -79,14 +90,42 @@ namespace SaMapViewer.Services
         public List<PlayerPoint> GetAlivePlayers()
         {
             var now = DateTime.UtcNow;
-            return _players.Values
-                .Where(p => now - p.LastUpdate < _timeout)
+            var alivePlayers = _players.Values
+                .Where(p => 
+                    // Игроки созданные вручную (координаты -10000, -10000) всегда считаются "живыми"
+                    (p.X == -10000f && p.Y == -10000f) || 
+                    // Или игроки которые обновлялись недавно
+                    (now - p.LastUpdate < _timeout)
+                )
                 .ToList();
+
+            _logger.LogDebug("GetAlivePlayers: {TotalPlayers} total, {AlivePlayers} alive (timeout: {Timeout}s)", 
+                _players.Count, alivePlayers.Count, _timeout.TotalSeconds);
+                
+            return alivePlayers;
         }
 
         public void RemovePlayer(string nick)
         {
-            _players.TryRemove(nick, out _);
+            if (_players.TryRemove(nick, out var removedPlayer))
+            {
+                _logger.LogInformation("Removed player: {Nick} (was at {X}, {Y})", nick, removedPlayer.X, removedPlayer.Y);
+            }
+            else
+            {
+                _logger.LogWarning("Attempted to remove non-existent player: {Nick}", nick);
+            }
+        }
+
+        public void AddPlayer(PlayerPoint player)
+        {
+            _logger.LogInformation("Adding player manually: {Nick} at ({X}, {Y}) with status {Status} and role {Role}", 
+                player.Nick, player.X, player.Y, player.Status, player.Role);
+            
+            _players.AddOrUpdate(player.Nick, player, (_, existing) => {
+                _logger.LogInformation("Replacing existing player: {Nick}", player.Nick);
+                return player;
+            });
         }
 
         public List<PlayerPoint> GetPlayersByStatus(PlayerStatus status)
@@ -105,10 +144,19 @@ namespace SaMapViewer.Services
 
         public List<PlayerPoint> GetAvailablePlayersForUnit()
         {
-            return _players.Values
+            var availablePlayers = GetAlivePlayers() // Используем GetAlivePlayers чтобы включить созданных вручную
                 .Where(p => p.Status == PlayerStatus.OnDutyOutOfUnit || p.Status == PlayerStatus.OnDuty)
                 .Where(p => !p.UnitId.HasValue)
                 .ToList();
+
+            _logger.LogDebug("GetAvailablePlayersForUnit: {Count} players available for units", availablePlayers.Count);
+            foreach (var player in availablePlayers)
+            {
+                _logger.LogDebug("Available player: {Nick} (Status: {Status}, Role: {Role}, Manual: {IsManual})", 
+                    player.Nick, player.Status, player.Role, player.X == -10000f && player.Y == -10000f);
+            }
+            
+            return availablePlayers;
         }
 
         public void AssignPlayerToUnit(string nick, Guid unitId)

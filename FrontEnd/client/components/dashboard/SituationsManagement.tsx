@@ -41,8 +41,8 @@ interface SituationsManagementProps {
   className?: string;
   situations: SituationRecord[];
   setSituations: React.Dispatch<React.SetStateAction<SituationRecord[]>>;
-  assignments: Record<number, number | null>;
-  setAssignments: React.Dispatch<React.SetStateAction<Record<number, number | null>>>;
+  assignments: Record<string, string | null>;
+  setAssignments: React.Dispatch<React.SetStateAction<Record<string, string | null>>>;
 }
 
 const SITUATION_TYPES = [

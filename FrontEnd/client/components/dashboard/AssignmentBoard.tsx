@@ -8,14 +8,15 @@ import {
   useRef,
   useState,
 } from "react";
-import type { PlayerRecord } from "./PlayersTable";
+
+import type { UnitDto } from "@shared/api";
 import type { SituationRecord } from "./SituationsPanel";
 
 interface AssignmentBoardProps {
-  players: PlayerRecord[];
+  units: UnitDto[];
   situations: SituationRecord[];
-  assignments: Record<number, number | null>;
-  onAssignmentChange: (playerId: number, situationId: number | null) => void;
+  assignments: Record<string, string | null>;
+  onAssignmentChange: (unitId: string, situationId: string | null) => void;
 }
 
 type Connection = {
@@ -27,36 +28,36 @@ type Connection = {
 const DRAG_DATA_TYPE = "application/x-dispatch-player";
 
 export function AssignmentBoard({
-  players,
+  units,
   situations,
   assignments,
   onAssignmentChange,
 }: AssignmentBoardProps) {
   const boardRef = useRef<HTMLDivElement | null>(null);
-  const unitRefs = useRef(new Map<number, HTMLButtonElement>());
-  const situationRefs = useRef(new Map<number, HTMLDivElement>());
-  const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [hoveredSituation, setHoveredSituation] = useState<number | null>(null);
+  const unitRefs = useRef(new Map<string, HTMLButtonElement>());
+  const situationRefs = useRef(new Map<string, HTMLDivElement>());
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [hoveredSituation, setHoveredSituation] = useState<string | null>(null);
   const [connections, setConnections] = useState<Connection[]>([]);
 
   const assignmentsBySituation = useMemo(() => {
-    const grouped = new Map<number, PlayerRecord[]>();
-    situations.forEach((situation) => grouped.set(situation.id, []));
-    players.forEach((player) => {
-      const target = assignments[player.id];
+    const grouped = new Map<string, UnitDto[]>();
+    situations.forEach((situation) => grouped.set(String(situation.id), []));
+    units.forEach((unit) => {
+      const target = assignments[unit.id];
       if (target == null) return;
       const bucket = grouped.get(target);
       if (!bucket) return;
-      bucket.push(player);
+      bucket.push(unit);
     });
     return grouped;
-  }, [assignments, players, situations]);
+  }, [assignments, units, situations]);
 
   const handleDragStart = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>, playerId: number) => {
-      event.dataTransfer.setData(DRAG_DATA_TYPE, String(playerId));
+    (event: React.DragEvent<HTMLButtonElement>, unitId: string) => {
+      event.dataTransfer.setData(DRAG_DATA_TYPE, unitId);
       event.dataTransfer.effectAllowed = "move";
-      setDraggingId(playerId);
+      setDraggingId(unitId);
     },
     [],
   );
@@ -66,22 +67,22 @@ export function AssignmentBoard({
     setHoveredSituation(null);
   }, []);
 
-  const assignPlayer = useCallback(
-    (playerId: number, situationId: number | null) => {
-      onAssignmentChange(playerId, situationId);
+  const assignUnit = useCallback(
+    (unitId: string, situationId: string | null) => {
+      onAssignmentChange(unitId, situationId);
     },
     [onAssignmentChange],
   );
 
   const handleDropOnSituation = useCallback(
-    (event: React.DragEvent<HTMLDivElement>, situationId: number) => {
+    (event: React.DragEvent<HTMLDivElement>, situationId: string) => {
       event.preventDefault();
       const data = event.dataTransfer.getData(DRAG_DATA_TYPE);
       if (!data) return;
-      assignPlayer(Number(data), situationId);
+      assignUnit(data, situationId);
       setHoveredSituation(null);
     },
-    [assignPlayer],
+    [assignUnit],
   );
 
   const handleDropOnUnassigned = useCallback(
@@ -89,24 +90,24 @@ export function AssignmentBoard({
       event.preventDefault();
       const data = event.dataTransfer.getData(DRAG_DATA_TYPE);
       if (!data) return;
-      assignPlayer(Number(data), null);
+      assignUnit(data, null);
     },
-    [assignPlayer],
+    [assignUnit],
   );
 
   const setupUnitRef = useCallback(
-    (playerId: number) => (node: HTMLButtonElement | null) => {
+    (unitId: string) => (node: HTMLButtonElement | null) => {
       if (!node) {
-        unitRefs.current.delete(playerId);
+        unitRefs.current.delete(unitId);
         return;
       }
-      unitRefs.current.set(playerId, node);
+      unitRefs.current.set(unitId, node);
     },
     [],
   );
 
   const setupSituationRef = useCallback(
-    (situationId: number) => (node: HTMLDivElement | null) => {
+    (situationId: string) => (node: HTMLDivElement | null) => {
       if (!node) {
         situationRefs.current.delete(situationId);
         return;
@@ -125,10 +126,9 @@ export function AssignmentBoard({
     const boardRect = boardEl.getBoundingClientRect();
     const next: Connection[] = [];
 
-    Object.entries(assignments).forEach(([playerIdKey, situationIdValue]) => {
+    Object.entries(assignments).forEach(([unitId, situationIdValue]) => {
       if (situationIdValue == null) return;
-      const playerId = Number(playerIdKey);
-      const unitEl = unitRefs.current.get(playerId);
+      const unitEl = unitRefs.current.get(unitId);
       const situationEl = situationRefs.current.get(situationIdValue);
       if (!unitEl || !situationEl) return;
 
@@ -142,8 +142,8 @@ export function AssignmentBoard({
       const controlX = (startX + endX) / 2;
 
       next.push({
-        id: `${playerId}-${situationIdValue}`,
-        gradientId: `gradient-${playerId}-${situationIdValue}`,
+        id: `${unitId}-${situationIdValue}`,
+        gradientId: `gradient-${unitId}-${situationIdValue}`,
         path: `M ${startX} ${startY} C ${controlX} ${startY}, ${controlX} ${endY}, ${endX} ${endY}`,
       });
     });
@@ -153,7 +153,7 @@ export function AssignmentBoard({
 
   useLayoutEffect(() => {
     recomputeConnections();
-  }, [assignments, recomputeConnections, players.length, situations.length]);
+  }, [assignments, recomputeConnections, units.length, situations.length]);
 
   useLayoutEffect(() => {
     if (!boardRef.current) return;
@@ -168,8 +168,8 @@ export function AssignmentBoard({
   }, [recomputeConnections]);
 
   const unassignedCount = useMemo(() => {
-    return players.filter((player) => assignments[player.id] == null).length;
-  }, [assignments, players]);
+    return units.filter((unit) => assignments[unit.id] == null).length;
+  }, [assignments, units]);
 
   return (
     <div
@@ -224,36 +224,36 @@ export function AssignmentBoard({
             </p>
           </header>
           <div className="flex flex-wrap gap-3">
-            {players.map((player) => {
-              const isAssigned = assignments[player.id] != null;
+            {units.map((unit) => {
+              const isAssigned = assignments[unit.id] != null;
               return (
                 <button
-                  key={player.id}
+                  key={unit.id}
                   type="button"
                   draggable
-                  onDragStart={(event) => handleDragStart(event, player.id)}
+                  onDragStart={(event) => handleDragStart(event, unit.id)}
                   onDragEnd={handleDragEnd}
-                  ref={setupUnitRef(player.id)}
+                  ref={setupUnitRef(unit.id)}
                   className={cn(
                     "group relative flex min-w-[140px] flex-col gap-2 rounded-2xl border border-border/40 bg-background/70 px-4 py-3 text-left shadow-sm transition hover:border-primary/40 hover:shadow-glow",
-                    draggingId === player.id && "opacity-70",
+                    draggingId === unit.id && "opacity-70",
                     isAssigned && "border-primary/50 bg-primary/10",
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border/50 bg-secondary/30 text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-                      {player.nickname.slice(0, 2)}
+                      {unit.name.slice(0, 2)}
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-foreground">{player.nickname}</p>
+                      <p className="text-sm font-semibold text-foreground">{unit.name}</p>
                       <p className="font-mono text-[0.6rem] uppercase tracking-[0.28em] text-muted-foreground">
-                        {player.callSign}
+                        {unit.marking}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-[0.65rem] text-muted-foreground">
-                    <span>{player.status}</span>
-                    <span>{player.channel}</span>
+                    <span>{unit.status}</span>
+                    <span>{unit.playerCount} чел.</span>
                   </div>
                   {isAssigned && (
                     <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[0.6rem] uppercase tracking-[0.24em] text-primary">
@@ -291,25 +291,26 @@ export function AssignmentBoard({
           </div>
           <div className="space-y-4">
             {situations.map((situation) => {
-              const assigned = assignmentsBySituation.get(situation.id) ?? [];
+              const situationIdStr = String(situation.id);
+              const assigned = assignmentsBySituation.get(situationIdStr) ?? [];
               return (
                 <div
-                  key={situation.id}
-                  ref={setupSituationRef(situation.id)}
+                  key={situationIdStr}
+                  ref={setupSituationRef(situationIdStr)}
                   onDragOver={(event) => {
                     event.preventDefault();
                     event.dataTransfer.dropEffect = "move";
-                    setHoveredSituation(situation.id);
+                    setHoveredSituation(situationIdStr);
                   }}
                   onDragLeave={() => {
                     setHoveredSituation((current) =>
-                      current === situation.id ? null : current,
+                      current === situationIdStr ? null : current,
                     );
                   }}
-                  onDrop={(event) => handleDropOnSituation(event, situation.id)}
+                  onDrop={(event) => handleDropOnSituation(event, situationIdStr)}
                   className={cn(
                     "relative overflow-hidden rounded-2xl border border-border/40 bg-secondary/20 px-5 py-5 transition hover:border-primary/40 hover:bg-secondary/25",
-                    hoveredSituation === situation.id && "border-primary/60 bg-secondary/30 shadow-glow",
+                    hoveredSituation === situationIdStr && "border-primary/60 bg-secondary/30 shadow-glow",
                   )}
                 >
                   <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-primary/0 via-primary/35 to-primary/0 opacity-0 transition group-hover:opacity-100" />
@@ -358,20 +359,20 @@ export function AssignmentBoard({
                           Drop units here
                         </span>
                       )}
-                      {assigned.map((player) => (
+                      {assigned.map((unit) => (
                         <div
-                          key={player.id}
+                          key={unit.id}
                           className="group flex items-center gap-2 rounded-full border border-border/50 bg-background/70 px-3 py-1 text-[0.65rem] text-muted-foreground transition hover:border-primary/40 hover:text-primary"
                         >
                           <span className="flex h-6 w-6 items-center justify-center rounded-full border border-border/50 bg-secondary/20 text-[0.55rem] font-semibold uppercase tracking-[0.18em] text-primary">
-                            {player.nickname.slice(0, 2)}
+                            {unit.name.slice(0, 2)}
                           </span>
                           <span className="font-mono uppercase tracking-[0.28em]">
-                            {player.callSign}
+                            {unit.marking}
                           </span>
                           <button
                             type="button"
-                            onClick={() => assignPlayer(player.id, null)}
+                            onClick={() => assignUnit(unit.id, null)}
                             className="text-xs uppercase tracking-[0.24em] text-muted-foreground transition hover:text-primary"
                           >
                             Release

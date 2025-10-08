@@ -29,74 +29,161 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Edit, Trash2, Filter } from "lucide-react";
-// import { getPlayerStatusText, getPlayerRoleText, getPlayerStatusColor, getPlayerRoleColor } from "@shared/api";
-import type { PlayerRecord } from "./PlayersTable";
+import { PlayerStatus, PlayerRole, PlayerPointDto } from "@shared/api";
 
 interface PlayersManagementProps {
   className?: string;
-  players: PlayerRecord[];
-  setPlayers: React.Dispatch<React.SetStateAction<PlayerRecord[]>>;
+  players: PlayerPointDto[];
+  setPlayers: React.Dispatch<React.SetStateAction<PlayerPointDto[]>>;
 }
 
 export function PlayersManagement({ className, players, setPlayers }: PlayersManagementProps) {
-  const [filteredPlayers, setFilteredPlayers] = useState<PlayerRecord[]>([]);
+  const [filteredPlayers, setFilteredPlayers] = useState<PlayerPointDto[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | "all">("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingPlayer, setEditingPlayer] = useState<PlayerRecord | null>(null);
-  const [newPlayer, setNewPlayer] = useState<Partial<PlayerRecord>>({
-    nickname: "",
-    callSign: "",
-    status: "",
-    comment: "",
-    channel: "",
-    lastUpdate: "",
-    priority: "Routine",
-    location: { x: 0, y: 0 },
+  const [editingPlayer, setEditingPlayer] = useState<PlayerPointDto | null>(null);
+  const [newPlayer, setNewPlayer] = useState({
+    nick: "",
+    role: PlayerRole.Officer,
+    status: PlayerStatus.OnDutyOutOfUnit, // Изменено с OutOfDuty на OnDutyOutOfUnit для доступности в юнитах
+    x: -10000, // Костыль-маркер для созданных вручную
+    y: -10000, // Костыль-маркер для созданных вручную
   });
+
+  // Функции для перевода enum'ов
+  const getStatusText = (status: PlayerStatus) => {
+    switch (status) {
+      case PlayerStatus.OutOfDuty: return "Вне службы";
+      case PlayerStatus.OnDuty: return "На службе";
+      case PlayerStatus.OnDutyLeadUnit: return "На службе (ведущий)";
+      case PlayerStatus.OnDutyOutOfUnit: return "На службе (вне юнита)";
+      default: return "Неизвестно";
+    }
+  };
+
+  const getRoleText = (role: PlayerRole) => {
+    switch (role) {
+      case PlayerRole.Officer: return "Офицер";
+      case PlayerRole.Supervisor: return "Супервайзер";
+      case PlayerRole.SuperSupervisor: return "Суперсупервайзер";
+      default: return "Неизвестно";
+    }
+  };
+
+  const formatLastUpdate = (lastUpdate: string) => {
+    try {
+      const date = new Date(lastUpdate);
+      return date.toLocaleString('ru-RU');
+    } catch {
+      return lastUpdate;
+    }
+  };
 
   // Фильтрация
   const filterPlayers = () => {
     let filtered = players;
-    if (searchTerm) {
+    if (searchTerm.trim()) {
       filtered = filtered.filter(player =>
-        player.nickname.toLowerCase().includes(searchTerm.toLowerCase())
+        player.nick.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     if (statusFilter !== "all") {
-      filtered = filtered.filter(player => player.status === statusFilter);
+      filtered = filtered.filter(player => player.status.toString() === statusFilter);
     }
     setFilteredPlayers(filtered);
   };
+  
   // вызывать фильтрацию при изменении зависимостей
-  useEffect(() => { filterPlayers(); }, [players, searchTerm, statusFilter]);
+  useEffect(() => { 
+    filterPlayers(); 
+  }, [players, searchTerm, statusFilter]);
 
-  const createPlayer = () => {
-    if (!newPlayer.nickname) return;
-    setPlayers(prev => [
-      ...prev,
-      {
-        ...newPlayer,
-        id: Math.max(0, ...prev.map(p => p.id)) + 1,
-        lastUpdate: "только что",
-      } as PlayerRecord,
-    ]);
-    setIsCreateDialogOpen(false);
-    setNewPlayer({
-      nickname: "",
-      callSign: "",
-      status: "",
-      comment: "",
-      channel: "",
-      lastUpdate: "",
-      priority: "Routine",
-      location: { x: 0, y: 0 },
-    });
+  const createPlayer = async () => {
+    if (!newPlayer.nick) {
+      alert("Введите никнейм игрока");
+      return;
+    }
+    
+    try {
+      const requestData = {
+        nick: newPlayer.nick,
+        x: newPlayer.x || -10000, // Костыль-маркер: -10000 означает создан вручную
+        y: newPlayer.y || -10000, // Костыль-маркер: -10000 означает создан вручную
+        role: newPlayer.role,
+        status: newPlayer.status
+      };
+      
+      // Отправляем запрос на создание игрока через API
+      const response = await fetch("/api/players", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": "changeme-key"
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create player: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      const createdPlayer = await response.json();
+      
+      // Успешно создан - добавляем к списку напрямую как PlayerPointDto
+      setPlayers(prev => [...prev, createdPlayer]);
+      setIsCreateDialogOpen(false);
+      setNewPlayer({
+        nick: "",
+        role: PlayerRole.Officer,
+        status: PlayerStatus.OnDutyOutOfUnit, // Изменено с OutOfDuty на OnDutyOutOfUnit для доступности в юнитах
+        x: -10000, // Костыль-маркер для созданных вручную
+        y: -10000, // Костыль-маркер для созданных вручную
+      });
+      
+      alert("Игрок успешно создан!");
+    } catch (error) {
+      console.error("Error creating player:", error);
+      alert(`Ошибка создания игрока: ${error.message}`);
+    }
   };
 
-  const deletePlayer = (id: number) => {
-    if (!confirm(`Удалить игрока #${id}?`)) return;
-    setPlayers(prev => prev.filter(p => p.id !== id));
+  const deletePlayer = async (nick: string) => {
+    const player = players.find(p => p.nick === nick);
+    if (!player) {
+      alert("Игрок не найден");
+      return;
+    }
+
+    if (!confirm(`Удалить игрока "${player.nick}"?`)) return;
+    
+    try {
+      console.log(`Deleting player: ${player.nick}`);
+      
+      // Удаляем игрока с сервера
+      const response = await fetch(`/api/players/${encodeURIComponent(player.nick)}`, {
+        method: "DELETE",
+        headers: { 
+          "X-API-Key": "changeme-key"
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete player: ${response.status} ${response.statusText} - ${errorText}`);
+      }
+
+      console.log(`Player ${player.nick} deleted from server`);
+      
+      // Удаляем из локального состояния
+      setPlayers(prev => prev.filter(p => p.nick !== nick));
+      
+      alert("Игрок успешно удален!");
+    } catch (error) {
+      console.error("Error deleting player:", error);
+      alert(`Ошибка удаления игрока: ${error.message}`);
+    }
   };
 
   // Можно реализовать простую статистику по статусу, если нужно
@@ -120,36 +207,82 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
                   Добавить игрока
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-xl">
                 <DialogHeader>
                   <DialogTitle>Добавить нового игрока</DialogTitle>
                   <DialogDescription>
-                    Создание нового игрока в системе
+                    Создание нового игрока в системе. Поля отмеченные * являются обязательными.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="nick" className="text-right">Ник</Label>
+                    <Label htmlFor="nick" className="text-right">Ник *</Label>
                     <Input
                       id="nick"
-                      value={newPlayer.nickname}
-                      onChange={(e) => setNewPlayer({...newPlayer, nickname: e.target.value})}
+                      value={newPlayer.nick}
+                      onChange={(e) => setNewPlayer({...newPlayer, nick: e.target.value})}
                       className="col-span-3"
+                      placeholder="Введите никнейм игрока"
                     />
                   </div>
-                  {/* Роль убрана, если потребуется — добавить строковое поле */}
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="role" className="text-right">Роль</Label>
+                    <Select value={newPlayer.role?.toString()} onValueChange={(value) => setNewPlayer({ ...newPlayer, role: parseInt(value) as PlayerRole })}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Выберите роль" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Офицер</SelectItem>
+                        <SelectItem value="1">Супервайзер</SelectItem>
+                        <SelectItem value="2">Суперсупервайзер</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="status" className="text-right">Статус</Label>
-                    <Input
-                      id="status"
-                      value={newPlayer.status}
-                      onChange={(e) => setNewPlayer({ ...newPlayer, status: e.target.value })}
-                      className="col-span-3"
-                    />
+                    <Select value={newPlayer.status?.toString()} onValueChange={(value) => setNewPlayer({ ...newPlayer, status: parseInt(value) as PlayerStatus })}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Выберите статус" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Вне службы</SelectItem>
+                        <SelectItem value="1">На службе</SelectItem>
+                        <SelectItem value="2">На службе (ведущий)</SelectItem>
+                        <SelectItem value="3">На службе (вне юнита)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label className="text-right">Координаты</Label>
+                    <div className="col-span-3 grid grid-cols-2 gap-2">
+                      <Input
+                        placeholder="X координата (-10000 = создан вручную)"
+                        type="number"
+                        value={newPlayer.x || ''}
+                        onChange={(e) => setNewPlayer({
+                          ...newPlayer, 
+                          x: parseFloat(e.target.value) || -10000
+                        })}
+                      />
+                      <Input
+                        placeholder="Y координата (-10000 = создан вручную)"
+                        type="number"
+                        value={newPlayer.y || ''}
+                        onChange={(e) => setNewPlayer({
+                          ...newPlayer, 
+                          y: parseFloat(e.target.value) || -10000
+                        })}
+                      />
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={createPlayer}>Создать</Button>
+                  <Button 
+                    onClick={createPlayer}
+                    disabled={!newPlayer.nick}
+                  >
+                    Создать игрока
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -177,10 +310,10 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
               <TableHeader>
                 <TableRow>
                   <TableHead>Ник</TableHead>
+                  <TableHead>Роль</TableHead>
                   <TableHead>Статус</TableHead>
-                  <TableHead>Комментарий</TableHead>
+                  <TableHead>Юнит</TableHead>
                   <TableHead>Координаты</TableHead>
-                  <TableHead>Канал</TableHead>
                   <TableHead>Последнее обновление</TableHead>
                   <TableHead>Действия</TableHead>
                 </TableRow>
@@ -192,15 +325,23 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
                   </TableRow>
                 ) : (
                   filteredPlayers.map((player) => (
-                    <TableRow key={player.nickname}>
-                      <TableCell className="font-medium">{player.nickname}</TableCell>
-                      <TableCell>{player.status}</TableCell>
-                      <TableCell>{player.comment}</TableCell>
-                      <TableCell>{player.location?.x}, {player.location?.y}</TableCell>
-                      <TableCell>{player.channel}</TableCell>
-                      <TableCell>{player.lastUpdate}</TableCell>
+                    <TableRow key={player.nick}>
+                      <TableCell className="font-medium">{player.nick}</TableCell>
+                      <TableCell>{getRoleText(player.role)}</TableCell>
                       <TableCell>
-                        <Button variant="destructive" onClick={() => deletePlayer(player.id)}>
+                        <Badge variant={player.status === PlayerStatus.OnDuty || player.status === PlayerStatus.OnDutyLeadUnit || player.status === PlayerStatus.OnDutyOutOfUnit ? "default" : "secondary"}>
+                          {getStatusText(player.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{player.unitId || "Не назначен"}</TableCell>
+                      <TableCell>
+                        {player.x === -10000 && player.y === -10000 
+                          ? "Создан вручную" 
+                          : `${player.x}, ${player.y}`}
+                      </TableCell>
+                      <TableCell>{formatLastUpdate(player.lastUpdate || "Не указано")}</TableCell>
+                      <TableCell>
+                        <Button variant="destructive" onClick={() => deletePlayer(player.nick)}>
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </TableCell>

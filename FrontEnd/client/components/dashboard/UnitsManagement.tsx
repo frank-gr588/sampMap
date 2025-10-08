@@ -44,13 +44,19 @@ import type { PlayerRecord } from "./PlayersTable";
 
 interface UnitsManagementProps {
   className?: string;
-  players: PlayerRecord[];
-  setPlayers: React.Dispatch<React.SetStateAction<PlayerRecord[]>>;
-  assignments: Record<number, number | null>;
-  setAssignments: React.Dispatch<React.SetStateAction<Record<number, number | null>>>;
+  players: PlayerPointDto[];
+  setPlayers: React.Dispatch<React.SetStateAction<PlayerPointDto[]>>;
+  assignments: Record<string, string | null>;
+  setAssignments: React.Dispatch<React.SetStateAction<Record<string, string | null>>>;
 }
 
-export function UnitsManagement({ className }: UnitsManagementProps) {
+export function UnitsManagement({ 
+  className, 
+  players, 
+  setPlayers, 
+  assignments, 
+  setAssignments 
+}: UnitsManagementProps) {
   const [units, setUnits] = useState<UnitDto[]>([]);
   const [availablePlayers, setAvailablePlayers] = useState<PlayerPointDto[]>([]);
   const [filteredUnits, setFilteredUnits] = useState<UnitDto[]>([]);
@@ -131,6 +137,11 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
 
   const createUnit = async () => {
     try {
+      if (!newUnit.name || !newUnit.marking) {
+        console.error("Name and marking are required");
+        return;
+      }
+      
       if (selectedPlayerNicks.length === 0) {
         console.error("At least one player must be selected");
         return;
@@ -273,26 +284,28 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
                 <DialogHeader>
                   <DialogTitle>Создать новый юнит</DialogTitle>
                   <DialogDescription>
-                    Создание юнита и назначение игроков
+                    Создайте новый оперативный юнит с указанием названия, маркировки и состава игроков. Все поля отмеченные * являются обязательными.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">Название</Label>
+                    <Label htmlFor="name" className="text-right">Название *</Label>
                     <Input
                       id="name"
                       value={newUnit.name}
                       onChange={(e) => setNewUnit({...newUnit, name: e.target.value})}
                       className="col-span-3"
+                      placeholder="Введите название юнита"
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="marking" className="text-right">Маркировка</Label>
+                    <Label htmlFor="marking" className="text-right">Маркировка *</Label>
                     <Input
                       id="marking"
                       value={newUnit.marking}
                       onChange={(e) => setNewUnit({...newUnit, marking: e.target.value})}
                       className="col-span-3"
+                      placeholder="Например: Ч-01, Ч-02"
                     />
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
@@ -305,7 +318,7 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
                     </div>
                   </div>
                   <div className="grid grid-cols-4 items-start gap-4">
-                    <Label className="text-right mt-2">Игроки</Label>
+                    <Label className="text-right mt-2">Игроки *</Label>
                     <div className="col-span-3 max-h-40 overflow-y-auto border rounded p-2">
                       {availablePlayers.length === 0 ? (
                         <p className="text-sm text-muted-foreground">Нет доступных игроков</p>
@@ -327,7 +340,10 @@ export function UnitsManagement({ className }: UnitsManagementProps) {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={createUnit} disabled={selectedPlayerNicks.length === 0}>
+                  <Button 
+                    onClick={createUnit} 
+                    disabled={!newUnit.name || !newUnit.marking || selectedPlayerNicks.length === 0}
+                  >
                     Создать юнит
                   </Button>
                 </DialogFooter>

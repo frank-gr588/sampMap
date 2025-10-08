@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { PlayerRecord } from "./PlayersTable";
 import type { SituationRecord } from "./SituationsPanel";
+import type { PlayerPointDto } from "@shared/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -11,12 +11,12 @@ import { SituationsManagement } from "./SituationsManagement";
 
 interface ManagementDashboardProps {
   className?: string;
-  players: PlayerRecord[];
-  setPlayers: React.Dispatch<React.SetStateAction<PlayerRecord[]>>;
+  players: PlayerPointDto[];
+  setPlayers: React.Dispatch<React.SetStateAction<PlayerPointDto[]>>;
   situations: SituationRecord[];
   setSituations: React.Dispatch<React.SetStateAction<SituationRecord[]>>;
-  assignments: Record<number, number | null>;
-  setAssignments: React.Dispatch<React.SetStateAction<Record<number, number | null>>>;
+  assignments: Record<string, string | null>;
+  setAssignments: React.Dispatch<React.SetStateAction<Record<string, string | null>>>;
 }
 
 export function ManagementDashboard({ className, players, setPlayers, situations, setSituations, assignments, setAssignments }: ManagementDashboardProps) {

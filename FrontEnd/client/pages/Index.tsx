@@ -1,6 +1,6 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 import { apiGet } from "@/lib/utils";
-import type { PlayerPointDto } from "@shared/api";
+import type { PlayerPointDto, UnitDto } from "@shared/api";
 import {
   PlayersTable,
   type PlayerRecord,
@@ -12,6 +12,7 @@ import {
 import { OperationsMap } from "@/components/dashboard/OperationsMap";
 import { AssignmentBoard } from "@/components/dashboard/AssignmentBoard";
 import { ManagementDashboard } from "@/components/dashboard/ManagementDashboard";
+import { UnitsManagement } from "@/components/dashboard/UnitsManagement";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -24,76 +25,59 @@ import {
   MapPin,
 } from "lucide-react";
 
-const initialPlayers: PlayerRecord[] = [
-  {
-    id: 1,
-    nickname: "Аврора",
-    callSign: "А-21",
-    status: "Патруль",
-    comment: "Зачистка северной магистрали завершена, дислокация у Бей-Сити.",
-    channel: "ТАК 1",
-    lastUpdate: "2 мин назад",
-    priority: "Routine",
-    location: { x: 62, y: 28 },
-  },
-  {
-    id: 2,
-    nickname: "Фурия",
-    callSign: "П-18",
-    status: "Преследование",
-    comment: "Высокоскоростная погоня на юг Дель-Перро, запрос воздушной поддержки.",
-    channel: "ТАК 3",
-    lastUpdate: "Сейчас",
-    priority: "Critical",
-    location: { x: 84, y: 44 },
-  },
-];
+const initialPlayers: PlayerPointDto[] = [ ];
 
-const initialSituations: SituationRecord[] = [
-  {
-    id: 1,
-    code: "Дельта-41",
-    title: "Погоня на магистрали — Дель-Перро",
-    status: "Активная",
-    location: "Автострада Дель-Перро ЮН",
-    leadUnit: "Фурия / П-18",
-    unitsAssigned: 5,
-    channel: "ТАК 3",
-    priority: "Critical",
-    updated: "Синх. 00:47 назад",
-  },
-];
+const initialSituations: SituationRecord[] = [];
 
-function buildInitialAssignments(players: PlayerRecord[]): Record<number, number | null> {
-  const assignments: Record<number, number | null> = {};
-  players.forEach((player) => {
-    assignments[player.id] = null;
+// Адаптер для конвертации PlayerPointDto в PlayerRecord для старых компонентов
+const adaptPlayerForUI = (player: PlayerPointDto, index: number): PlayerRecord => ({
+  id: index + 1,
+  nickname: player.nick,
+  callSign: player.nick,
+  status: player.status?.toString() || "OnDuty",
+  comment: "",
+  channel: "TAC 1",
+  lastUpdate: new Date(player.lastUpdate || Date.now()).toLocaleTimeString('ru-RU'),
+  priority: "Routine" as const,
+  location: { x: player.x || 0, y: player.y || 0 },
+});
+
+function buildInitialAssignments(units: UnitDto[]): Record<string, string | null> {
+  const assignments: Record<string, string | null> = {};
+  units.forEach((unit) => {
+    assignments[unit.id] = null;
   });
   return assignments;
 }
 
 export default function Index() {
   const [players, setPlayers] = useState(initialPlayers);
+  const [units, setUnits] = useState<UnitDto[]>([]);
   const [situations, setSituations] = useState(initialSituations);
-  const [assignments, setAssignments] = useState<Record<number, number | null>>(() =>
-    buildInitialAssignments(initialPlayers),
-  );
+  const [assignments, setAssignments] = useState<Record<string, string | null>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
 
+  // Адаптированные данные для старых компонентов
+  const adaptedPlayers = useMemo(() => 
+    players.map(adaptPlayerForUI), 
+    [players]
+  );
+
+  // Адаптированная фильтрация для старых компонентов
   const statuses = useMemo(
     () =>
-      Array.from(new Set(players.map((player) => player.status))).sort((a, b) =>
+      Array.from(new Set(adaptedPlayers.map((player) => player.status))).sort((a, b) =>
         a.localeCompare(b),
       ),
-    [players],
+    [adaptedPlayers],
   );
 
   const filteredPlayers = useMemo(() => {
-    return players.filter((player) => {
+    return adaptedPlayers.filter((player) => {
       const matchesStatus = statusFilter === "all" || player.status === statusFilter;
       if (!normalizedSearch) {
         return matchesStatus;
@@ -102,46 +86,18 @@ export default function Index() {
       const matchesSearch = haystack.includes(normalizedSearch);
       return matchesStatus && matchesSearch;
     });
-  }, [normalizedSearch, players, statusFilter]);
+  }, [normalizedSearch, adaptedPlayers, statusFilter]);
 
-  const activeUnits = players.filter(
-    (player) => player.status !== "Code 7" && player.status !== "Unassigned",
+  const activeUnits = units.filter(
+    (unit) => unit.status !== "Code 7" && unit.status !== "Unassigned",
   ).length;
-  const criticalCalls = players.filter((player) => player.priority === "Critical").length;
-  const codeSeven = players.filter((player) => player.status === "Code 7").length;
+  const criticalSituations = situations.filter((situation) => situation.priority === "Critical").length;
+  const codeSeven = units.filter((unit) => unit.status === "Code 7").length;
 
-  const handleUnitStatusChange = (playerId: number, status: string) => {
-    setPlayers((current) =>
-      current.map((player) =>
-        player.id === playerId
-          ? {
-              ...player,
-              status,
-              lastUpdate: "Just now",
-            }
-          : player,
-      ),
-    );
-  };
-
-  const handleEditPlayer = (playerId: number, updates: Partial<PlayerRecord>) => {
-    setPlayers((current) =>
-      current.map((player) =>
-        player.id === playerId
-          ? {
-              ...player,
-              ...updates,
-              lastUpdate: "Just now",
-            }
-          : player,
-      ),
-    );
-  };
-
-  const handleAssignmentChange = (playerId: number, situationId: number | null) => {
+  const handleAssignmentChange = (unitId: string, situationId: string | null) => {
     setAssignments((current) => ({
       ...current,
-      [playerId]: situationId,
+      [unitId]: situationId,
     }));
   };
 
@@ -177,9 +133,9 @@ export default function Index() {
     setSituations((current) => current.filter((situation) => situation.id !== situationId));
     setAssignments((current) => {
       const next = { ...current };
-      Object.entries(next).forEach(([playerId, assigned]) => {
-        if (assigned === situationId) {
-          next[Number(playerId)] = null;
+      Object.entries(next).forEach(([unitId, assigned]) => {
+        if (assigned === String(situationId)) {
+          next[unitId] = null;
         }
       });
       return next;
@@ -201,18 +157,7 @@ export default function Index() {
       try {
         const data = await apiGet<PlayerPointDto[]>("/api/coords/all");
         if (cancelled) return;
-        const mapped: PlayerRecord[] = data.map((p, idx) => ({
-          id: idx + 1,
-          nickname: p.nick,
-          callSign: p.nick,
-          status: p.status?.toString() || "On Patrol",
-          comment: "",
-          channel: "TAC 1",
-          lastUpdate: new Date(p.lastUpdate || Date.now()).toLocaleTimeString('ru-RU'),
-          priority: "Routine",
-          location: { x: p.x || 0, y: p.y || 0 },
-        }));
-        setPlayers(mapped);
+        setPlayers(data);
       } catch (error) {
         console.warn("Failed to sync player data:", error);
       }
@@ -222,6 +167,20 @@ export default function Index() {
     load();
     const id = setInterval(load, 5000);
     return () => { cancelled = true; clearInterval(id); };
+  }, []);
+
+  // Load units from backend
+  useEffect(() => {
+    const loadUnits = async () => {
+      try {
+        const data = await apiGet<UnitDto[]>("/api/unitscontrollernew");
+        setUnits(data);
+      } catch (error) {
+        console.warn("Failed to load units:", error);
+      }
+    };
+
+    loadUnits();
   }, []);
 
   return (
@@ -265,13 +224,13 @@ export default function Index() {
                 icon={<ShieldCheck className="h-5 w-5" />}
                 label="Активные юниты"
                 value={activeUnits}
-                description={`${players.length} всего на смене`}
+                description={`${units.length} всего на смене`}
                 accent="from-primary/25"
               />
               <SummaryCard
                 icon={<AlertTriangle className="h-5 w-5" />}
-                label="Критические вызовы"
-                value={criticalCalls}
+                label="Критические ситуации"
+                value={criticalSituations}
                 description="Требуют немедленного внимания"
                 accent="from-rose-400/30"
               />
@@ -310,7 +269,8 @@ export default function Index() {
             <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <div>
                 <OperationsMap
-                  players={players}
+                  players={adaptedPlayers}
+                  units={units}
                   assignments={assignments}
                   situations={situations}
                 />
@@ -327,7 +287,7 @@ export default function Index() {
 
             <section>
               <AssignmentBoard
-                players={players}
+                units={units}
                 situations={situations}
                 assignments={assignments}
                 onAssignmentChange={handleAssignmentChange}
@@ -335,16 +295,11 @@ export default function Index() {
             </section>
 
             <section className="grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-              <PlayersTable
+              <UnitsManagement 
                 players={players}
-                filteredPlayers={filteredPlayers}
-                searchTerm={searchTerm}
-                onSearchTermChange={setSearchTerm}
-                statusFilter={statusFilter}
-                onStatusFilterChange={setStatusFilter}
-                statuses={statuses}
-                onStatusChange={handleUnitStatusChange}
-                onEditPlayer={handleEditPlayer}
+                setPlayers={setPlayers}
+                assignments={assignments}
+                setAssignments={setAssignments}
               />
               <SituationsPanel
                 situations={situations}

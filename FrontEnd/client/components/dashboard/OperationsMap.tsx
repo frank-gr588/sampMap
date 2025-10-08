@@ -4,10 +4,12 @@ import * as React from "react";
 import { Compass, MapPin } from "lucide-react";
 import type { PlayerRecord } from "./PlayersTable";
 import type { SituationRecord } from "./SituationsPanel";
+import type { UnitDto } from "@shared/api";
 
 interface OperationsMapProps {
   players: PlayerRecord[];
-  assignments?: Record<number, number | null>;
+  units: UnitDto[];
+  assignments?: Record<string, string | null>;
   situations?: SituationRecord[];
 }
 
@@ -38,7 +40,7 @@ const WORLD_MAX_X = 3000;
 const WORLD_MIN_Y = -3000;
 const WORLD_MAX_Y = 3000;
 
-export function OperationsMap({ players, assignments, situations }: OperationsMapProps) {
+export function OperationsMap({ players, units, assignments, situations }: OperationsMapProps) {
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const [dims, setDims] = React.useState<{ w: number; h: number }>({ w: 0, h: 0 });
 
@@ -158,9 +160,9 @@ export function OperationsMap({ players, assignments, situations }: OperationsMa
         </svg>
         <div className="relative z-10 h-full w-full">
           {players.map((player) => {
-            const situationId = assignments?.[player.id] ?? null;
+            const situationId = assignments?.[String(player.id)] ?? null;
             const situation = situationId
-              ? situations?.find((item) => item.id === situationId)
+              ? situations?.find((item) => item.id === Number(situationId))
               : undefined;
 
             // Support both world coords and precomputed percentage
