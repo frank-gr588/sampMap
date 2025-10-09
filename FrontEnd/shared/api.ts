@@ -26,6 +26,19 @@ export enum PlayerRole {
   SuperSupervisor = 2
 }
 
+// Player rank enum
+export enum PlayerRank {
+  ChiefOfPolice = 0,
+  AssistantChiefOfPolice = 1,
+  DeputyChiefOfPolice = 2,
+  PoliceCommander = 3,
+  PoliceCaptain = 4,
+  PoliceLieutenant = 5,
+  PoliceSergeant = 6,
+  PoliceInspector = 7,
+  PoliceOfficer = 8
+}
+
 // Shared types between frontend and backend
 export interface PlayerPointDto {
   nick: string;
@@ -33,6 +46,7 @@ export interface PlayerPointDto {
   y: number;
   status: PlayerStatus;
   role: PlayerRole;
+  rank: PlayerRank;
   unitId?: string | null;
   lastUpdate?: string;
 }
@@ -50,7 +64,6 @@ export interface SituationDto {
 
 export interface UnitDto {
   id: string;
-  name: string;
   marking: string;
   playerNicks: string[];
   playerCount: number;
@@ -86,7 +99,6 @@ export interface UpdatePlayerRoleRequest {
 }
 
 export interface CreateUnitRequest {
-  name: string;
   marking: string;
   playerNicks: string[];
   isLeadUnit: boolean;
@@ -101,7 +113,6 @@ export interface RemovePlayerFromUnitRequest {
 }
 
 export interface UpdateUnitRequest {
-  name?: string;
   marking?: string;
 }
 
@@ -162,6 +173,53 @@ export function getPlayerRoleColor(role: PlayerRole): string {
       return "bg-purple-500/15 text-purple-200 border-purple-500/50";
     case PlayerRole.SuperSupervisor:
       return "bg-red-500/15 text-red-200 border-red-500/50";
+    default:
+      return "bg-muted/30 text-muted-foreground border-border/50";
+  }
+}
+
+export function getPlayerRankText(rank: PlayerRank): string {
+  switch (rank) {
+    case PlayerRank.ChiefOfPolice:
+      return "Chief of Police";
+    case PlayerRank.AssistantChiefOfPolice:
+      return "Assistant Chief";
+    case PlayerRank.DeputyChiefOfPolice:
+      return "Deputy Chief";
+    case PlayerRank.PoliceCommander:
+      return "Commander";
+    case PlayerRank.PoliceCaptain:
+      return "Captain";
+    case PlayerRank.PoliceLieutenant:
+      return "Lieutenant";
+    case PlayerRank.PoliceSergeant:
+      return "Sergeant";
+    case PlayerRank.PoliceInspector:
+      return "Inspector";
+    case PlayerRank.PoliceOfficer:
+      return "Officer";
+    default:
+      return "Unknown";
+  }
+}
+
+export function getPlayerRankColor(rank: PlayerRank): string {
+  switch (rank) {
+    case PlayerRank.ChiefOfPolice:
+      return "bg-red-600/20 text-red-100 border-red-600/60";
+    case PlayerRank.AssistantChiefOfPolice:
+    case PlayerRank.DeputyChiefOfPolice:
+      return "bg-red-500/15 text-red-200 border-red-500/50";
+    case PlayerRank.PoliceCommander:
+    case PlayerRank.PoliceCaptain:
+      return "bg-orange-500/15 text-orange-200 border-orange-500/50";
+    case PlayerRank.PoliceLieutenant:
+    case PlayerRank.PoliceSergeant:
+      return "bg-amber-500/15 text-amber-200 border-amber-500/50";
+    case PlayerRank.PoliceInspector:
+      return "bg-blue-500/15 text-blue-200 border-blue-500/50";
+    case PlayerRank.PoliceOfficer:
+      return "bg-slate-500/15 text-slate-200 border-slate-500/50";
     default:
       return "bg-muted/30 text-muted-foreground border-border/50";
   }

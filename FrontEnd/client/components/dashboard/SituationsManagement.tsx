@@ -46,11 +46,11 @@ interface SituationsManagementProps {
 }
 
 const SITUATION_TYPES = [
-  { value: "code7", label: "Code 7", color: "bg-yellow-500/15 text-yellow-200 border-yellow-500/50" },
   { value: "pursuit", label: "Погоня", color: "bg-red-500/15 text-red-200 border-red-500/50" },
   { value: "trafficstop", label: "Трафик-стоп", color: "bg-amber-500/15 text-amber-200 border-amber-500/50" },
   { value: "code6", label: "Code 6", color: "bg-purple-500/15 text-purple-200 border-purple-500/50" },
   { value: "911", label: "911", color: "bg-red-600/15 text-red-300 border-red-600/50" },
+  { value: "panic", label: "PANIC", color: "bg-rose-600/20 text-rose-200 border-rose-600/60" },
 ];
 
 export function SituationsManagement({ className }: SituationsManagementProps) {

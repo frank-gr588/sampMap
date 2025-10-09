@@ -16,8 +16,12 @@ namespace SaMapViewer.Services
             _playerTracker = playerTracker;
         }
 
-        public Unit CreateUnit(string name, string marking, List<string> playerNicks, bool isLeadUnit = false)
+        public Unit CreateUnit(string marking, List<string> playerNicks, bool isLeadUnit = false)
         {
+            // Валидация маркировки
+            if (string.IsNullOrWhiteSpace(marking) || marking.Length > 8)
+                throw new ArgumentException("Marking must be 1-8 characters");
+
             // Проверяем, что все игроки доступны для создания юнита
             foreach (var nick in playerNicks)
             {
@@ -31,8 +35,7 @@ namespace SaMapViewer.Services
 
             var unit = new Unit 
             { 
-                Name = name ?? string.Empty, 
-                Marking = marking ?? string.Empty, 
+                Marking = marking, 
                 PlayerNicks = new HashSet<string>(playerNicks, StringComparer.OrdinalIgnoreCase),
                 IsLeadUnit = isLeadUnit
             };
@@ -65,9 +68,9 @@ namespace SaMapViewer.Services
             return unit;
         }
 
-        public Unit CreateUnitFromSinglePlayer(string name, string marking, string playerNick, bool isLeadUnit = false)
+        public Unit CreateUnitFromSinglePlayer(string marking, string playerNick, bool isLeadUnit = false)
         {
-            return CreateUnit(name, marking, new List<string> { playerNick }, isLeadUnit);
+            return CreateUnit(marking, new List<string> { playerNick }, isLeadUnit);
         }
 
         public Unit? GetUnit(Guid id)
@@ -78,7 +81,7 @@ namespace SaMapViewer.Services
 
         public bool TryGet(Guid id, out Unit? unit) => _units.TryGetValue(id, out unit);
 
-        public List<Unit> GetAll() => _units.Values.OrderBy(u => u.Name).ToList();
+        public List<Unit> GetAll() => _units.Values.OrderBy(u => u.Marking).ToList();
 
         public void RemoveUnit(Guid id)
         {
@@ -110,12 +113,14 @@ namespace SaMapViewer.Services
             // Добавляем игрока в юнит
             unit.PlayerNicks.Add(playerNick);
 
-            // Определяем статус игрока
-            bool shouldBeLead = unit.IsLeadUnit && (player.Role == PlayerRole.Supervisor || player.Role == PlayerRole.SuperSupervisor);
+            // Определяем статус игрока в юните
+            // Если игрок - супервайзер, юнит автоматически становится ведущим
+            bool shouldBeLead = unit.IsLeadUnit || player.Role == PlayerRole.Supervisor || player.Role == PlayerRole.SuperSupervisor;
             
             if (shouldBeLead)
             {
                 _playerTracker.SetPlayerStatus(playerNick, PlayerStatus.OnDutyLeadUnit);
+                unit.IsLeadUnit = true; // Обновляем флаг юнита
             }
             else
             {
@@ -140,15 +145,40 @@ namespace SaMapViewer.Services
                 {
                     RemoveUnit(unitId);
                 }
+                else
+                {
+                    // Проверяем, остались ли супервайзеры в юните
+                    bool hasSupervisors = unit.PlayerNicks.Any(nick =>
+                    {
+                        var player = _playerTracker.GetPlayer(nick);
+                        return player != null && (player.Role == PlayerRole.Supervisor || player.Role == PlayerRole.SuperSupervisor);
+                    });
+
+                    // Если супервайзеров не осталось, юнит больше не ведущий
+                    if (!hasSupervisors && unit.IsLeadUnit)
+                    {
+                        unit.IsLeadUnit = false;
+                        
+                        // Обновляем статус всех оставшихся игроков
+                        foreach (var nick in unit.PlayerNicks)
+                        {
+                            _playerTracker.SetPlayerStatus(nick, PlayerStatus.OnDuty);
+                        }
+                    }
+                }
             }
         }
 
-        public void UpdateUnit(Guid id, string? name = null, string? marking = null)
+        public void UpdateUnit(Guid id, string? marking = null)
         {
             if (_units.TryGetValue(id, out var unit))
             {
-                if (name != null) unit.Name = name;
-                if (marking != null) unit.Marking = marking;
+                if (marking != null)
+                {
+                    if (marking.Length > 8)
+                        throw new ArgumentException("Marking must be max 8 characters");
+                    unit.Marking = marking;
+                }
             }
         }
 
@@ -239,24 +269,30 @@ namespace SaMapViewer.Services
             var unit = GetUnit(unitId);
             if (unit == null) return new List<PlayerPoint>();
 
-            return unit.PlayerNicks
-                .Select(nick => _playerTracker.GetPlayer(nick))
-                .Where(player => player != null)
-                .ToList()!;
+            var players = new List<PlayerPoint>();
+            foreach (var nick in unit.PlayerNicks)
+            {
+                var player = _playerTracker.GetPlayer(nick);
+                if (player != null)
+                {
+                    players.Add(player);
+                }
+            }
+            return players;
         }
 
         // Устаревшие методы для обратной совместимости
         [Obsolete("Use CreateUnit with List<string> playerNicks instead")]
-        public Unit CreateUnit(string name, string marking, string playerNick, bool isLeadUnit = false)
+        public Unit CreateUnit(string marking, string playerNick, bool isLeadUnit = false)
         {
-            return CreateUnitFromSinglePlayer(name, marking, playerNick, isLeadUnit);
+            return CreateUnitFromSinglePlayer(marking, playerNick, isLeadUnit);
         }
 
         [Obsolete("Use RemoveUnit instead")]
         public void Delete(Guid id) => RemoveUnit(id);
 
         [Obsolete("Use UpdateUnit instead")]
-        public void Rename(Guid id, string name, string marking) => UpdateUnit(id, name, marking);
+        public void Rename(Guid id, string marking) => UpdateUnit(id, marking);
 
         [Obsolete("Use SetUnitStatus instead")]
         public void SetStatus(Guid id, string status) => SetUnitStatus(id, status);

@@ -17,6 +17,19 @@ namespace SaMapViewer.Models
         SuperSupervisor   // суперсупервайзер
     }
 
+    public enum PlayerRank
+    {
+        ChiefOfPolice = 0,           // Начальник полиции
+        AssistantChiefOfPolice = 1,  // Помощник начальника
+        DeputyChiefOfPolice = 2,     // Заместитель начальника
+        PoliceCommander = 3,         // Командир
+        PoliceCaptain = 4,           // Капитан
+        PoliceLieutenant = 5,        // Лейтенант
+        PoliceSergeant = 6,          // Сержант
+        PoliceInspector = 7,         // Инспектор
+        PoliceOfficer = 8            // Офицер
+    }
+
     public class PlayerPoint
     {
         public string Nick { get; set; }
@@ -24,6 +37,7 @@ namespace SaMapViewer.Models
         public float Y { get; set; }
         public PlayerStatus Status { get; set; }
         public PlayerRole Role { get; set; }
+        public PlayerRank Rank { get; set; }
         public Guid? UnitId { get; set; }  // ID юнита, в котором находится игрок
         public DateTime LastUpdate { get; set; }
 
@@ -32,8 +46,11 @@ namespace SaMapViewer.Models
             Nick = nick;
             X = x;
             Y = y;
-            Status = PlayerStatus.OutOfDuty;
+            // Для игроков созданных вручную (маркер -10000,-10000) используем OnDutyOutOfUnit
+            // Для игроков из скрипта используем OutOfDuty
+            Status = (x == -10000f && y == -10000f) ? PlayerStatus.OnDutyOutOfUnit : PlayerStatus.OutOfDuty;
             Role = PlayerRole.Officer;
+            Rank = PlayerRank.PoliceOfficer; // По умолчанию - офицер
             LastUpdate = DateTime.UtcNow;
         }
 
@@ -56,10 +73,17 @@ namespace SaMapViewer.Models
             LastUpdate = DateTime.UtcNow;
         }
 
+        public void SetRank(PlayerRank rank)
+        {
+            Rank = rank;
+            LastUpdate = DateTime.UtcNow;
+        }
+
         public void AssignToUnit(Guid unitId)
         {
             UnitId = unitId;
-            Status = PlayerStatus.OnDuty;
+            // НЕ изменяем Status - он должен устанавливаться UnitsService
+            // в зависимости от роли игрока и типа юнита
             LastUpdate = DateTime.UtcNow;
         }
 

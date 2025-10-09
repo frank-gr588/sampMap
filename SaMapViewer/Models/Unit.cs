@@ -7,8 +7,7 @@ namespace SaMapViewer.Models
     public class Unit
     {
         public Guid Id { get; set; } = Guid.NewGuid();
-        public string Name { get; set; } = string.Empty; // Название юнита
-        public string Marking { get; set; } = string.Empty; // Маркировка
+        public string Marking { get; set; } = string.Empty; // Маркировка (макс 8 символов)
         public HashSet<string> PlayerNicks { get; set; } = new(StringComparer.OrdinalIgnoreCase); // Игроки в юните
         public int PlayerCount => PlayerNicks.Count; // Количество игроков
         public string Status { get; set; } = string.Empty; // Статус (с фронта)

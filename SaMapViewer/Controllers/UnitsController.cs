@@ -10,7 +10,6 @@ namespace SaMapViewer.Controllers
 {
     public class RenameDto
     {
-        public string? Name { get; set; }
         public string? Marking { get; set; }
     }
 
@@ -48,7 +47,6 @@ namespace SaMapViewer.Controllers
 
         public class CreateUnitDto 
         { 
-            public string Name { get; set; } = string.Empty; 
             public string Marking { get; set; } = string.Empty; 
             public string PlayerNick { get; set; } = string.Empty;
             public bool IsLeadUnit { get; set; } 
@@ -56,7 +54,6 @@ namespace SaMapViewer.Controllers
         
         public class UpdateUnitDto 
         { 
-            public string? Name { get; set; }
             public string? Marking { get; set; } 
         }
         
@@ -75,9 +72,9 @@ namespace SaMapViewer.Controllers
 
             try
             {
-                var unit = _units.CreateUnitFromSinglePlayer(dto.Name, dto.Marking, dto.PlayerNick, dto.IsLeadUnit);
+                var unit = _units.CreateUnitFromSinglePlayer(dto.Marking, dto.PlayerNick, dto.IsLeadUnit);
                 _hub.Clients.All.SendAsync("UnitCreated", unit);
-                _ = _history.AppendAsync(new { type = "unit_create", id = unit.Id, unit.Name, unit.Marking, playerNick = dto.PlayerNick, unit.IsLeadUnit });
+                _ = _history.AppendAsync(new { type = "unit_create", id = unit.Id, unit.Marking, playerNick = dto.PlayerNick, unit.IsLeadUnit });
                 return unit;
             }
             catch (ArgumentException ex)
@@ -116,11 +113,11 @@ namespace SaMapViewer.Controllers
         public IActionResult Rename(Guid id, [FromBody] RenameDto dto)
         {
             if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
-            _units.UpdateUnit(id, dto?.Name ?? string.Empty, dto?.Marking ?? string.Empty);
+            _units.UpdateUnit(id, dto?.Marking ?? string.Empty);
             if (_units.TryGet(id, out var u) && u != null)
             {
                 _hub.Clients.All.SendAsync("UnitUpdated", u);
-                _ = _history.AppendAsync(new { type = "unit_rename", id = u.Id, u.Name, u.Marking });
+                _ = _history.AppendAsync(new { type = "unit_rename", id = u.Id, u.Marking });
             }
             return Ok();
         }

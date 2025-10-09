@@ -41,6 +41,7 @@ import {
   getPlayerStatusColor
 } from "@shared/api";
 import type { PlayerRecord } from "./PlayersTable";
+import { MarkingSelector } from "./MarkingSelector";
 
 interface UnitsManagementProps {
   className?: string;
@@ -66,10 +67,12 @@ export function UnitsManagement({
   const [selectedUnit, setSelectedUnit] = useState<UnitDto | null>(null);
   const [unitPlayers, setUnitPlayers] = useState<PlayerPointDto[]>([]);
   const [showAddPlayerDialog, setShowAddPlayerDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [unitForStatusChange, setUnitForStatusChange] = useState<UnitDto | null>(null);
+  const [newUnitStatus, setNewUnitStatus] = useState<string>("");
 
   // Form states
   const [newUnit, setNewUnit] = useState<CreateUnitRequest>({
-    name: "",
     marking: "",
     playerNicks: [],
     isLeadUnit: false
@@ -88,7 +91,6 @@ export function UnitsManagement({
 
     if (searchTerm) {
       filtered = filtered.filter(unit => 
-        unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         unit.marking.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
@@ -116,7 +118,10 @@ export function UnitsManagement({
       const response = await fetch("/api/players/available-for-unit");
       if (response.ok) {
         const data = await response.json();
+        console.log(`Fetched ${data.length} available players:`, data);
         setAvailablePlayers(data);
+      } else {
+        console.error("Failed to fetch available players:", response.status, await response.text());
       }
     } catch (error) {
       console.error("Error fetching available players:", error);
@@ -137,23 +142,31 @@ export function UnitsManagement({
 
   const createUnit = async () => {
     try {
-      if (!newUnit.name || !newUnit.marking) {
-        console.error("Name and marking are required");
+      if (!newUnit.marking) {
+        alert("Заполните маркировку юнита (макс. 8 символов)");
+        return;
+      }
+      
+      if (newUnit.marking.length > 8) {
+        alert("Маркировка не может быть длиннее 8 символов");
         return;
       }
       
       if (selectedPlayerNicks.length === 0) {
-        console.error("At least one player must be selected");
+        alert("Выберите хотя бы одного игрока для создания юнита");
         return;
       }
 
       // Создаем юнит со всеми выбранными игроками
+      // Используем заглавные буквы для совместимости с C# DTO
       const unitToCreate = {
-        Name: newUnit.name,
         Marking: newUnit.marking,
         PlayerNicks: selectedPlayerNicks,
         IsLeadUnit: newUnit.isLeadUnit
       };
+
+      console.log("Creating unit:", unitToCreate);
+      console.log("Available players before creation:", availablePlayers.length);
 
       const response = await fetch("/api/unitscontrollernew", {
         method: "POST",
@@ -169,15 +182,20 @@ export function UnitsManagement({
         await fetchAvailablePlayers();
         setIsCreateDialogOpen(false);
         setNewUnit({
-          name: "",
           marking: "",
           playerNicks: [],
           isLeadUnit: false
         });
         setSelectedPlayerNicks([]);
+        alert("Юнит успешно создан!");
+      } else {
+        const errorText = await response.text();
+        alert(`Ошибка создания юнита: ${response.status} - ${errorText}`);
+        console.error("Error creating unit:", response.status, errorText);
       }
     } catch (error) {
       console.error("Error creating unit:", error);
+      alert(`Ошибка создания юнита: ${error.message}`);
     }
   };
 
@@ -262,6 +280,41 @@ export function UnitsManagement({
     await fetchUnitPlayers(unit.id);
   };
 
+  const openStatusDialog = (unit: UnitDto) => {
+    setUnitForStatusChange(unit);
+    // Default to Code 0 when no explicit status present
+    setNewUnitStatus(unit.status || "Code 0");
+    setShowStatusDialog(true);
+  };
+
+  const updateUnitStatus = async () => {
+    if (!unitForStatusChange) return;
+
+    try {
+      const response = await fetch(`/api/unitscontrollernew/${unitForStatusChange.id}/status`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": "changeme-key"
+        },
+        body: JSON.stringify({ status: newUnitStatus })
+      });
+
+      if (response.ok) {
+        await fetchUnits();
+        setShowStatusDialog(false);
+        setUnitForStatusChange(null);
+        setNewUnitStatus("");
+      } else {
+        const errorText = await response.text();
+        alert(`Ошибка изменения статуса: ${response.status} - ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Error updating unit status:", error);
+      alert(`Ошибка изменения статуса: ${error.message}`);
+    }
+  };
+
   return (
     <div className={className}>
       <Card>
@@ -273,40 +326,36 @@ export function UnitsManagement({
                 Всего юнитов: {units.length} | Активных: {units.filter(u => u.playerCount > 0).length}
               </CardDescription>
             </div>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+              setIsCreateDialogOpen(open);
+              if (open) {
+                // Обновляем список доступных игроков при открытии диалога
+                fetchAvailablePlayers();
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
                   Создать юнит
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Создать новый юнит</DialogTitle>
                   <DialogDescription>
-                    Создайте новый оперативный юнит с указанием названия, маркировки и состава игроков. Все поля отмеченные * являются обязательными.
+                    Создайте новый оперативный юнит с маркировкой (макс. 8 символов) и составом игроков. Все поля отмеченные * являются обязательными.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">Название *</Label>
-                    <Input
-                      id="name"
-                      value={newUnit.name}
-                      onChange={(e) => setNewUnit({...newUnit, name: e.target.value})}
-                      className="col-span-3"
-                      placeholder="Введите название юнита"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="marking" className="text-right">Маркировка *</Label>
-                    <Input
-                      id="marking"
-                      value={newUnit.marking}
-                      onChange={(e) => setNewUnit({...newUnit, marking: e.target.value})}
-                      className="col-span-3"
-                      placeholder="Например: Ч-01, Ч-02"
-                    />
+                  <div className="space-y-2">
+                    <Label>Маркировка *</Label>
+                    {isCreateDialogOpen && (
+                      <MarkingSelector
+                        value={newUnit.marking}
+                        onChange={(marking) => setNewUnit({...newUnit, marking})}
+                        existingMarkings={units.map(u => u.marking)}
+                      />
+                    )}
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
                     <Label className="text-right">Ведущий юнит</Label>
@@ -342,7 +391,7 @@ export function UnitsManagement({
                 <DialogFooter>
                   <Button 
                     onClick={createUnit} 
-                    disabled={!newUnit.name || !newUnit.marking || selectedPlayerNicks.length === 0}
+                    disabled={!newUnit.marking || newUnit.marking.length > 8 || selectedPlayerNicks.length === 0}
                   >
                     Создать юнит
                   </Button>
@@ -357,7 +406,7 @@ export function UnitsManagement({
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Поиск по названию или маркировке..."
+                placeholder="Поиск по маркировке..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -370,7 +419,6 @@ export function UnitsManagement({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Название</TableHead>
                   <TableHead>Маркировка</TableHead>
                   <TableHead>Игроков</TableHead>
                   <TableHead>Статус</TableHead>
@@ -382,17 +430,16 @@ export function UnitsManagement({
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">Загрузка...</TableCell>
+                    <TableCell colSpan={6} className="text-center">Загрузка...</TableCell>
                   </TableRow>
                 ) : filteredUnits.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">Юниты не найдены</TableCell>
+                    <TableCell colSpan={6} className="text-center">Юниты не найдены</TableCell>
                   </TableRow>
                 ) : (
                   filteredUnits.map((unit) => (
                     <TableRow key={unit.id}>
-                      <TableCell className="font-medium">{unit.name}</TableCell>
-                      <TableCell>{unit.marking}</TableCell>
+                      <TableCell className="font-medium text-lg">{unit.marking}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4" />
@@ -400,8 +447,21 @@ export function UnitsManagement({
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={unit.status ? "default" : "secondary"}>
-                          {unit.status || "Готов"}
+                        <Badge 
+                          variant={
+                            unit.status === "Code 0" ? "destructive" :
+                            unit.status === "Code 1" ? "destructive" :
+                            unit.status === "Code 3" ? "default" :
+                            unit.status === "Code 4 Adam" ? "default" :
+                            unit.status ? "secondary" : "outline"
+                          }
+                          className={`cursor-pointer hover:opacity-80 ${
+                            unit.status === "Code 0" ? "bg-red-600 text-white animate-pulse" :
+                            unit.status === "Code 1" ? "bg-orange-600 text-white" : ""
+                          }`}
+                          onClick={() => openStatusDialog(unit)}
+                        >
+                          {unit.status || "Code 0"}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -453,7 +513,7 @@ export function UnitsManagement({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedUnit?.name} ({selectedUnit?.marking})
+              Юнит: {selectedUnit?.marking}
             </DialogTitle>
             <DialogDescription>
               Управление игроками в юните
@@ -531,6 +591,46 @@ export function UnitsManagement({
               )}
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Диалог изменения статуса юнита */}
+      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Изменить статус юнита</DialogTitle>
+            <DialogDescription>
+              Установите радиокод для юнита "{unitForStatusChange?.marking}". Code 0/1 - критические, требуют немедленной реакции!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="unit-status">Статус</Label>
+              <Select value={newUnitStatus} onValueChange={setNewUnitStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите статус (Code X)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Code 0">Code 0 (Офицер на земле - критично!)</SelectItem>
+                  <SelectItem value="Code 1">Code 1 (Офицер в бедственном положении)</SelectItem>
+                  <SelectItem value="Code 2">Code 2 (Вызов низкого приоритета)</SelectItem>
+                  <SelectItem value="Code 3">Code 3 (Вызов высокого приоритета)</SelectItem>
+                  <SelectItem value="Code 4">Code 4 (Помощь не требуется)</SelectItem>
+                  <SelectItem value="Code 4 Adam">Code 4 Adam (Преступник потерян, поиск)</SelectItem>
+                  <SelectItem value="Code 6">Code 6 (Резервный/Проверка)</SelectItem>
+                  <SelectItem value="Code 7">Code 7 (Убытие со службы/Перерыв)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowStatusDialog(false)}>
+              Отмена
+            </Button>
+            <Button onClick={updateUnitStatus}>
+              Сохранить
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

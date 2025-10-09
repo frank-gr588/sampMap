@@ -98,3 +98,86 @@
 {"ts":"2025-10-08T15:16:07.9517449Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1211.9308,"y":-2044.6145}}
 {"ts":"2025-10-08T15:16:09.9518215Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1211.9308,"y":-2044.6145}}
 {"ts":"2025-10-08T17:42:13.8490902Z","ev":{"type":"unit_create","id":"f70ea143-6781-4488-b26b-069f95c92904","Name":"lincoln","Marking":"L12","playerNicks":["Frank Kuznesov"],"IsLeadUnit":true}}
+{"ts":"2025-10-08T20:33:13.4380743Z","ev":{"type":"unit_create","id":"d3cac0df-ac33-44cc-817c-9c1280dd00ef","Name":"1-Lincoln-12","Marking":"L12","playerNicks":["Frank Kuznesov"],"IsLeadUnit":false}}
+{"ts":"2025-10-08T20:34:22.1869999Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1133.0504,"y":-2038.4034}}
+{"ts":"2025-10-08T20:34:24.2185871Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1133.0504,"y":-2038.4034}}
+{"ts":"2025-10-08T20:34:26.2608599Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1133.0504,"y":-2038.4034}}
+{"ts":"2025-10-08T20:34:28.2775542Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1133.0504,"y":-2038.4034}}
+{"ts":"2025-10-08T20:34:30.2997241Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:32.3028448Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:34.3297114Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:36.3360983Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:38.3383003Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:40.386581Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:42.3967167Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:44.4132359Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:46.4373142Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:48.4672565Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:34:50.4796455Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1135.3,"y":-2034.16}}
+{"ts":"2025-10-08T20:34:52.4854752Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1135.3,"y":-2034.16}}
+{"ts":"2025-10-08T20:34:54.4857734Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1135.3,"y":-2034.16}}
+{"ts":"2025-10-08T20:34:56.5284536Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1273.9589,"y":-2023.4135}}
+{"ts":"2025-10-08T20:34:58.5281757Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1274.2957,"y":-2023.4135}}
+{"ts":"2025-10-08T20:35:00.5771361Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1274.3218,"y":-2023.4114}}
+{"ts":"2025-10-08T20:35:02.6438103Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1274.1285,"y":-2013.4646}}
+{"ts":"2025-10-08T20:36:17.740983Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1272.6526,"y":-2005.2865}}
+{"ts":"2025-10-08T20:36:19.763112Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1270.5848,"y":-1997.797}}
+{"ts":"2025-10-08T20:36:21.7800527Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1259.0144,"y":-1999.3784}}
+{"ts":"2025-10-08T20:36:23.8471286Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1256.9625,"y":-2009.1272}}
+{"ts":"2025-10-08T20:37:06.6560062Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1257.4221,"y":-2011.6757}}
+{"ts":"2025-10-08T20:37:08.6807803Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1253.3978,"y":-2016.8911}}
+{"ts":"2025-10-08T20:37:10.7149674Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1242.7352,"y":-2019.627}}
+{"ts":"2025-10-08T20:37:12.7509405Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1231.155,"y":-2022.5499}}
+{"ts":"2025-10-08T20:37:14.7653975Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.9641,"y":-2026.5986}}
+{"ts":"2025-10-08T20:37:16.766116Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1220.0336,"y":-2027.8097}}
+{"ts":"2025-10-08T20:37:33.0228333Z","ev":{"type":"unit_add_player","unitId":"d3cac0df-ac33-44cc-817c-9c1280dd00ef","playerNick":"Frank_Kuznesov"}}
+{"ts":"2025-10-08T20:42:28.4653689Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1133.0504,"y":-2038.4034}}
+{"ts":"2025-10-08T20:42:30.4772123Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1133.0504,"y":-2038.4034}}
+{"ts":"2025-10-08T20:42:32.5142775Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:42:34.5359642Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:42:36.5466911Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:42:38.5799603Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:42:40.6133944Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:42:42.6147671Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-08T20:42:44.6290704Z","ev":{"type":"coords","nick":"Frank_Kuznesov","x":1226.98,"y":-2036.93}}
+{"ts":"2025-10-09T07:47:13.8292952Z","ev":{"type":"unit_create","id":"f9ad65a0-939e-4c17-b393-b1229b4ec1e8","Name":"stephan","Marking":"L12","playerNicks":["Frank Kuznesov"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T07:54:28.0851051Z","ev":{"type":"unit_create","id":"0a6b3b65-2ff4-4b40-af37-457bfca97a37","Name":"L12","Marking":"L12","playerNicks":["Frank Kuznesov"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T07:54:50.135574Z","ev":{"type":"situation_add_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37","asLeadUnit":false}}
+{"ts":"2025-10-09T07:54:59.5294891Z","ev":{"type":"situation_remove_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37"}}
+{"ts":"2025-10-09T07:55:03.702803Z","ev":{"type":"situation_add_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37","asLeadUnit":false}}
+{"ts":"2025-10-09T07:55:18.6903013Z","ev":{"type":"situation_remove_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37"}}
+{"ts":"2025-10-09T07:55:20.8839227Z","ev":{"type":"situation_add_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37","asLeadUnit":false}}
+{"ts":"2025-10-09T07:55:31.3276327Z","ev":{"type":"situation_remove_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37"}}
+{"ts":"2025-10-09T07:55:36.7729044Z","ev":{"type":"situation_add_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37","asLeadUnit":false}}
+{"ts":"2025-10-09T07:55:42.2710921Z","ev":{"type":"situation_update_metadata","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"Moderate","title":"Code 6"}}}
+{"ts":"2025-10-09T07:55:45.7807157Z","ev":{"type":"situation_close","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf"}}
+{"ts":"2025-10-09T07:55:47.6220927Z","ev":{"type":"situation_close","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf"}}
+{"ts":"2025-10-09T07:55:59.3533835Z","ev":{"type":"situation_update_metadata","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"High","title":"Code 6"}}}
+{"ts":"2025-10-09T07:56:53.0042489Z","ev":{"type":"situation_add_unit","situationId":"2731f3f6-be78-4342-9174-f7c3129e1cbf","unitId":"0a6b3b65-2ff4-4b40-af37-457bfca97a37","asLeadUnit":false}}
+{"ts":"2025-10-09T07:57:14.4018719Z","ev":{"type":"situation_update_metadata","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"Critical","title":"Code 6"}}}
+{"ts":"2025-10-09T07:57:25.5964422Z","ev":{"type":"situation_update_metadata","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"High","title":"Code 6"}}}
+{"ts":"2025-10-09T07:57:51.3930029Z","ev":{"type":"situation_update_metadata","id":"2731f3f6-be78-4342-9174-f7c3129e1cbf","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"Low","title":"Code 6"}}}
+{"ts":"2025-10-09T07:58:29.8987151Z","ev":{"type":"situation_close","id":"3941e2d8-3eaf-4b0e-b018-4e6b399ac578"}}
+{"ts":"2025-10-09T07:58:44.5620545Z","ev":{"type":"situation_update_metadata","id":"3941e2d8-3eaf-4b0e-b018-4e6b399ac578","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"Low","title":"Code 7"}}}
+{"ts":"2025-10-09T08:08:55.8124788Z","ev":{"type":"unit_create","id":"28cc5184-42c2-402e-85b3-936aaf643b86","Name":"stephan","Marking":"L12","playerNicks":["Frank Kuznesov"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T08:09:15.2713475Z","ev":{"type":"situation_close","id":"c594aaf9-bf68-426a-9085-e6e06264be2c"}}
+{"ts":"2025-10-09T08:09:34.0587908Z","ev":{"type":"situation_add_unit","situationId":"c594aaf9-bf68-426a-9085-e6e06264be2c","unitId":"28cc5184-42c2-402e-85b3-936aaf643b86","asLeadUnit":false}}
+{"ts":"2025-10-09T08:11:29.5171545Z","ev":{"type":"situation_open","id":"c594aaf9-bf68-426a-9085-e6e06264be2c"}}
+{"ts":"2025-10-09T08:49:56.3628177Z","ev":{"type":"unit_create","id":"099fec58-86ba-4f85-b466-85c61e623d45","Name":"12","Marking":"L12","playerNicks":["Larry Truman"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T08:50:02.9012208Z","ev":{"type":"unit_create","id":"40bae8ba-f04d-404d-9277-903c57260718","Name":"12","Marking":"123","playerNicks":["Frank Kuznesov"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T08:50:10.0724252Z","ev":{"type":"unit_create","id":"2da409ac-14b7-4cd2-995c-0f86e5490dc6","Name":"123123","Marking":"123321","playerNicks":["Lucy Chen"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T08:50:25.0254971Z","ev":{"type":"unit_status","id":"40bae8ba-f04d-404d-9277-903c57260718","Status":"Code 4"}}
+{"ts":"2025-10-09T08:50:30.1471654Z","ev":{"type":"unit_status","id":"099fec58-86ba-4f85-b466-85c61e623d45","Status":"Code 4"}}
+{"ts":"2025-10-09T08:50:33.5681678Z","ev":{"type":"unit_status","id":"2da409ac-14b7-4cd2-995c-0f86e5490dc6","Status":"Code 4"}}
+{"ts":"2025-10-09T08:50:44.0148437Z","ev":{"type":"unit_status","id":"40bae8ba-f04d-404d-9277-903c57260718","Status":"Code 0"}}
+{"ts":"2025-10-09T08:51:15.272661Z","ev":{"type":"situation_add_unit","situationId":"a30c5a15-a8a5-4ea1-939e-591ddb316e42","unitId":"40bae8ba-f04d-404d-9277-903c57260718","asLeadUnit":false}}
+{"ts":"2025-10-09T08:51:17.0300521Z","ev":{"type":"situation_add_unit","situationId":"a30c5a15-a8a5-4ea1-939e-591ddb316e42","unitId":"099fec58-86ba-4f85-b466-85c61e623d45","asLeadUnit":false}}
+{"ts":"2025-10-09T08:51:18.6839034Z","ev":{"type":"situation_add_unit","situationId":"a30c5a15-a8a5-4ea1-939e-591ddb316e42","unitId":"2da409ac-14b7-4cd2-995c-0f86e5490dc6","asLeadUnit":false}}
+{"ts":"2025-10-09T08:51:44.3944317Z","ev":{"type":"situation_close","id":"a30c5a15-a8a5-4ea1-939e-591ddb316e42"}}
+{"ts":"2025-10-09T08:51:52.4703266Z","ev":{"type":"situation_update_metadata","id":"a30c5a15-a8a5-4ea1-939e-591ddb316e42","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"High","title":"panic"}}}
+{"ts":"2025-10-09T08:51:55.5119948Z","ev":{"type":"situation_open","id":"a30c5a15-a8a5-4ea1-939e-591ddb316e42"}}
+{"ts":"2025-10-09T08:51:55.52633Z","ev":{"type":"situation_update_metadata","id":"a30c5a15-a8a5-4ea1-939e-591ddb316e42","metadata":{"location":"\u041D\u0435\u0438\u0437\u0432\u0435\u0441\u0442\u043D\u043E","channel":"TAC 1","priority":"High","title":"panic","status":"Stabilizing"}}}
+{"ts":"2025-10-09T08:52:20.3226723Z","ev":{"type":"situation_delete","id":"a30c5a15-a8a5-4ea1-939e-591ddb316e42"}}
+{"ts":"2025-10-09T08:54:10.7012346Z","ev":{"type":"unit_delete","id":"40bae8ba-f04d-404d-9277-903c57260718","playerNicks":["Frank Kuznesov"]}}
+{"ts":"2025-10-09T09:33:32.5377086Z","ev":{"type":"unit_create","id":"6378d9b2-1938-4536-b517-865ae189eeb8","Marking":"3B 302","playerNicks":["Frank Kuznesov"],"IsLeadUnit":false}}
+{"ts":"2025-10-09T09:33:44.9479877Z","ev":{"type":"unit_status","id":"6378d9b2-1938-4536-b517-865ae189eeb8","Status":"Code 7"}}

@@ -65,12 +65,16 @@ namespace SaMapViewer.Services
             _players.AddOrUpdate(nick,
                 _ =>
                 {
-                    var p = new PlayerPoint(nick, 0, 0);
+                    // ВАЖНО: если игрока нет в словаре, логируем предупреждение
+                    // SetPlayerStatus должен вызываться только на существующих игроках!
+                    _logger.LogWarning("SetPlayerStatus called on non-existent player: {Nick} - creating with manual coordinates", nick);
+                    var p = new PlayerPoint(nick, -10000f, -10000f); // Создаем с "manual" координатами
                     p.SetStatus(status);
                     return p;
                 },
                 (_, existing) =>
                 {
+                    _logger.LogDebug("Setting player status: {Nick} from {OldStatus} to {NewStatus}", nick, existing.Status, status);
                     existing.SetStatus(status);
                     return existing;
                 });
@@ -163,7 +167,12 @@ namespace SaMapViewer.Services
         {
             if (_players.TryGetValue(nick, out var player))
             {
+                _logger.LogInformation("Assigning player {Nick} to unit {UnitId}", nick, unitId);
                 player.AssignToUnit(unitId);
+            }
+            else
+            {
+                _logger.LogWarning("Cannot assign player {Nick} to unit {UnitId} - player not found", nick, unitId);
             }
         }
 
@@ -171,7 +180,12 @@ namespace SaMapViewer.Services
         {
             if (_players.TryGetValue(nick, out var player))
             {
+                _logger.LogInformation("Removing player {Nick} from unit {UnitId}", nick, player.UnitId);
                 player.RemoveFromUnit();
+            }
+            else
+            {
+                _logger.LogWarning("Cannot remove player {Nick} from unit - player not found", nick);
             }
         }
     }

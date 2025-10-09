@@ -35,7 +35,6 @@ namespace SaMapViewer.Controllers
 
         public class CreateUnitDto 
         { 
-            public string Name { get; set; } = string.Empty; 
             public string Marking { get; set; } = string.Empty; 
             public List<string> PlayerNicks { get; set; } = new List<string>();
             public bool IsLeadUnit { get; set; } 
@@ -58,13 +57,13 @@ namespace SaMapViewer.Controllers
             public float Y { get; set; }
             public PlayerStatus Status { get; set; }
             public PlayerRole Role { get; set; }
+            public PlayerRank Rank { get; set; }
             public string? UnitId { get; set; }
             public string LastUpdate { get; set; } = string.Empty;
         }
         
         public class UpdateUnitDto 
         { 
-            public string? Name { get; set; }
             public string? Marking { get; set; } 
         }
         
@@ -83,9 +82,9 @@ namespace SaMapViewer.Controllers
 
             try
             {
-                var unit = _units.CreateUnit(dto.Name, dto.Marking, dto.PlayerNicks, dto.IsLeadUnit);
+                var unit = _units.CreateUnit(dto.Marking, dto.PlayerNicks, dto.IsLeadUnit);
                 _hub.Clients.All.SendAsync("UnitCreated", unit);
-                _ = _history.AppendAsync(new { type = "unit_create", id = unit.Id, unit.Name, unit.Marking, playerNicks = unit.PlayerNicks, unit.IsLeadUnit });
+                _ = _history.AppendAsync(new { type = "unit_create", id = unit.Id, unit.Marking, playerNicks = unit.PlayerNicks, unit.IsLeadUnit });
                 return unit;
             }
             catch (ArgumentException ex)
@@ -134,12 +133,12 @@ namespace SaMapViewer.Controllers
             if (unit == null)
                 return NotFound($"Unit with ID {id} not found");
 
-            _units.UpdateUnit(id, dto.Name, dto.Marking);
+            _units.UpdateUnit(id, dto.Marking);
             var updatedUnit = _units.GetUnit(id);
             if (updatedUnit != null)
             {
                 _hub.Clients.All.SendAsync("UnitUpdated", updatedUnit);
-                _ = _history.AppendAsync(new { type = "unit_update", id = updatedUnit.Id, updatedUnit.Name, updatedUnit.Marking });
+                _ = _history.AppendAsync(new { type = "unit_update", id = updatedUnit.Id, updatedUnit.Marking });
             }
             return Ok();
         }
@@ -289,6 +288,7 @@ namespace SaMapViewer.Controllers
                 Y = p.Y,
                 Status = p.Status,
                 Role = p.Role,
+                Rank = p.Rank,
                 UnitId = p.UnitId?.ToString(),
                 LastUpdate = p.LastUpdate.ToString("O")
             }).ToList();

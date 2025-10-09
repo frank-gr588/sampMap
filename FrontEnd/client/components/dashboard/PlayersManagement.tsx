@@ -29,7 +29,14 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Search, Plus, Edit, Trash2, Filter } from "lucide-react";
-import { PlayerStatus, PlayerRole, PlayerPointDto } from "@shared/api";
+import { 
+  PlayerStatus, 
+  PlayerRole, 
+  PlayerRank,
+  PlayerPointDto,
+  getPlayerRankText,
+  getPlayerRankColor
+} from "@shared/api";
 
 interface PlayersManagementProps {
   className?: string;
@@ -42,10 +49,12 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | "all">("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<PlayerPointDto | null>(null);
   const [newPlayer, setNewPlayer] = useState({
     nick: "",
     role: PlayerRole.Officer,
+    rank: PlayerRank.PoliceOfficer,
     status: PlayerStatus.OnDutyOutOfUnit, // Изменено с OutOfDuty на OnDutyOutOfUnit для доступности в юнитах
     x: -10000, // Костыль-маркер для созданных вручную
     y: -10000, // Костыль-маркер для созданных вручную
@@ -137,6 +146,7 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
       setNewPlayer({
         nick: "",
         role: PlayerRole.Officer,
+        rank: PlayerRank.PoliceOfficer,
         status: PlayerStatus.OnDutyOutOfUnit, // Изменено с OutOfDuty на OnDutyOutOfUnit для доступности в юнитах
         x: -10000, // Костыль-маркер для созданных вручную
         y: -10000, // Костыль-маркер для созданных вручную
@@ -146,6 +156,74 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
     } catch (error) {
       console.error("Error creating player:", error);
       alert(`Ошибка создания игрока: ${error.message}`);
+    }
+  };
+
+  const openEditDialog = (player: PlayerPointDto) => {
+    setEditingPlayer(player);
+    setIsEditDialogOpen(true);
+  };
+
+  const updatePlayer = async () => {
+    if (!editingPlayer) return;
+    
+    try {
+      // Обновляем роль
+      const roleResponse = await fetch(`/api/players/${encodeURIComponent(editingPlayer.nick)}/role`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": "changeme-key"
+        },
+        body: JSON.stringify({ role: editingPlayer.role })
+      });
+
+      if (!roleResponse.ok) {
+        const errorText = await roleResponse.text();
+        throw new Error(`Failed to update role: ${roleResponse.status} - ${errorText}`);
+      }
+
+      // Обновляем звание
+      const rankResponse = await fetch(`/api/players/${encodeURIComponent(editingPlayer.nick)}/rank`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": "changeme-key"
+        },
+        body: JSON.stringify({ rank: editingPlayer.rank })
+      });
+
+      if (!rankResponse.ok) {
+        const errorText = await rankResponse.text();
+        throw new Error(`Failed to update rank: ${rankResponse.status} - ${errorText}`);
+      }
+
+      // Обновляем статус
+      const statusResponse = await fetch(`/api/players/${encodeURIComponent(editingPlayer.nick)}/status`, {
+        method: "PUT",
+        headers: { 
+          "Content-Type": "application/json",
+          "X-API-Key": "changeme-key"
+        },
+        body: JSON.stringify({ status: editingPlayer.status })
+      });
+
+      if (!statusResponse.ok) {
+        const errorText = await statusResponse.text();
+        throw new Error(`Failed to update status: ${statusResponse.status} - ${errorText}`);
+      }
+
+      // Обновляем в локальном состоянии
+      setPlayers(prev => prev.map(p => 
+        p.nick === editingPlayer.nick ? editingPlayer : p
+      ));
+      
+      setIsEditDialogOpen(false);
+      setEditingPlayer(null);
+      alert("Характеристики игрока успешно обновлены!");
+    } catch (error) {
+      console.error("Error updating player:", error);
+      alert(`Ошибка обновления игрока: ${error.message}`);
     }
   };
 
@@ -239,6 +317,25 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
                     </Select>
                   </div>
                   <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="rank" className="text-right">Звание</Label>
+                    <Select value={newPlayer.rank?.toString()} onValueChange={(value) => setNewPlayer({ ...newPlayer, rank: parseInt(value) as PlayerRank })}>
+                      <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Выберите звание" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Chief of Police</SelectItem>
+                        <SelectItem value="1">Assistant Chief of Police</SelectItem>
+                        <SelectItem value="2">Deputy Chief of Police</SelectItem>
+                        <SelectItem value="3">Police Commander</SelectItem>
+                        <SelectItem value="4">Police Captain</SelectItem>
+                        <SelectItem value="5">Police Lieutenant</SelectItem>
+                        <SelectItem value="6">Police Sergeant</SelectItem>
+                        <SelectItem value="7">Police Inspector</SelectItem>
+                        <SelectItem value="8">Police Officer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="status" className="text-right">Статус</Label>
                     <Select value={newPlayer.status?.toString()} onValueChange={(value) => setNewPlayer({ ...newPlayer, status: parseInt(value) as PlayerStatus })}>
                       <SelectTrigger className="col-span-3">
@@ -310,6 +407,7 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
               <TableHeader>
                 <TableRow>
                   <TableHead>Ник</TableHead>
+                  <TableHead>Звание</TableHead>
                   <TableHead>Роль</TableHead>
                   <TableHead>Статус</TableHead>
                   <TableHead>Юнит</TableHead>
@@ -321,12 +419,17 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
               <TableBody>
                 {filteredPlayers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">Игроки не найдены</TableCell>
+                    <TableCell colSpan={8} className="text-center">Игроки не найдены</TableCell>
                   </TableRow>
                 ) : (
                   filteredPlayers.map((player) => (
                     <TableRow key={player.nick}>
                       <TableCell className="font-medium">{player.nick}</TableCell>
+                      <TableCell>
+                        <Badge className={getPlayerRankColor(player.rank)}>
+                          {getPlayerRankText(player.rank)}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{getRoleText(player.role)}</TableCell>
                       <TableCell>
                         <Badge variant={player.status === PlayerStatus.OnDuty || player.status === PlayerStatus.OnDutyLeadUnit || player.status === PlayerStatus.OnDutyOutOfUnit ? "default" : "secondary"}>
@@ -341,9 +444,14 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
                       </TableCell>
                       <TableCell>{formatLastUpdate(player.lastUpdate || "Не указано")}</TableCell>
                       <TableCell>
-                        <Button variant="destructive" onClick={() => deletePlayer(player.nick)}>
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openEditDialog(player)}>
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button variant="destructive" size="sm" onClick={() => deletePlayer(player.nick)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
@@ -353,6 +461,102 @@ export function PlayersManagement({ className, players, setPlayers }: PlayersMan
           </div>
         </CardContent>
       </Card>
+
+      {/* Диалог редактирования игрока */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Редактировать игрока: {editingPlayer?.nick}</DialogTitle>
+            <DialogDescription>
+              Изменить роль и статус игрока. Изменения будут применены немедленно.
+            </DialogDescription>
+          </DialogHeader>
+          {editingPlayer && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-role" className="text-right">Роль</Label>
+                <Select 
+                  value={editingPlayer.role?.toString()} 
+                  onValueChange={(value) => setEditingPlayer({ 
+                    ...editingPlayer, 
+                    role: parseInt(value) as PlayerRole 
+                  })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Выберите роль" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Офицер</SelectItem>
+                    <SelectItem value="1">Супервайзер</SelectItem>
+                    <SelectItem value="2">Суперсупервайзер</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-rank" className="text-right">Звание</Label>
+                <Select 
+                  value={editingPlayer.rank?.toString()} 
+                  onValueChange={(value) => setEditingPlayer({ 
+                    ...editingPlayer, 
+                    rank: parseInt(value) as PlayerRank 
+                  })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Выберите звание" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Chief of Police</SelectItem>
+                    <SelectItem value="1">Assistant Chief of Police</SelectItem>
+                    <SelectItem value="2">Deputy Chief of Police</SelectItem>
+                    <SelectItem value="3">Police Commander</SelectItem>
+                    <SelectItem value="4">Police Captain</SelectItem>
+                    <SelectItem value="5">Police Lieutenant</SelectItem>
+                    <SelectItem value="6">Police Sergeant</SelectItem>
+                    <SelectItem value="7">Police Inspector</SelectItem>
+                    <SelectItem value="8">Police Officer</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-status" className="text-right">Статус</Label>
+                <Select 
+                  value={editingPlayer.status?.toString()} 
+                  onValueChange={(value) => setEditingPlayer({ 
+                    ...editingPlayer, 
+                    status: parseInt(value) as PlayerStatus 
+                  })}
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Выберите статус" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Вне службы</SelectItem>
+                    <SelectItem value="1">На службе</SelectItem>
+                    <SelectItem value="2">На службе (ведущий)</SelectItem>
+                    <SelectItem value="3">На службе (вне юнита)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {editingPlayer.unitId && (
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label className="text-right text-muted-foreground">Юнит</Label>
+                  <div className="col-span-3 text-muted-foreground">
+                    {editingPlayer.unitId}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button onClick={updatePlayer}>
+              Сохранить изменения
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

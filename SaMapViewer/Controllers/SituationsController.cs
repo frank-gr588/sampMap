@@ -80,6 +80,130 @@ namespace SaMapViewer.Controllers
             return _situations.GetAll();
         }
 
+        [HttpGet("{id}")]
+        public ActionResult<Situation> GetSituation(Guid id)
+        {
+            var situation = _situations.GetSituation(id);
+            if (situation == null)
+                return NotFound($"Situation with ID {id} not found");
+            return situation;
+        }
+
+        public class UpdateMetadataDto { public Dictionary<string, string> Metadata { get; set; } = new(); }
+
+        [HttpPut("{id}/metadata")]
+        public IActionResult UpdateMetadata(Guid id, [FromBody] UpdateMetadataDto dto)
+        {
+            if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
+            
+            var situation = _situations.GetSituation(id);
+            if (situation == null)
+                return NotFound($"Situation with ID {id} not found");
+
+            // Обновляем метаданные
+            foreach (var kvp in dto.Metadata)
+            {
+                situation.Metadata[kvp.Key] = kvp.Value;
+            }
+
+            _hub.Clients.All.SendAsync("SituationUpdated", situation);
+            _ = _history.AppendAsync(new { type = "situation_update_metadata", id, metadata = situation.Metadata });
+            return Ok(situation);
+        }
+
+        [HttpPost("{id}/close")]
+        public IActionResult CloseSituation(Guid id)
+        {
+            if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
+            
+            var situation = _situations.GetSituation(id);
+            if (situation == null)
+                return NotFound($"Situation with ID {id} not found");
+
+            _situations.CloseSituation(id);
+            var updatedSituation = _situations.GetSituation(id);
+            if (updatedSituation != null)
+            {
+                _hub.Clients.All.SendAsync("SituationUpdated", updatedSituation);
+                _ = _history.AppendAsync(new { type = "situation_close", id });
+            }
+            return Ok();
+        }
+
+        [HttpPost("{id}/open")]
+        public IActionResult OpenSituation(Guid id)
+        {
+            if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
+            
+            var situation = _situations.GetSituation(id);
+            if (situation == null)
+                return NotFound($"Situation with ID {id} not found");
+
+            _situations.OpenSituation(id);
+            var updatedSituation = _situations.GetSituation(id);
+            if (updatedSituation != null)
+            {
+                _hub.Clients.All.SendAsync("SituationUpdated", updatedSituation);
+                _ = _history.AppendAsync(new { type = "situation_open", id });
+            }
+            return Ok();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteSituation(Guid id)
+        {
+            if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
+            
+            var situation = _situations.GetSituation(id);
+            if (situation == null)
+                return NotFound($"Situation with ID {id} not found");
+
+            _situations.RemoveSituation(id);
+            _hub.Clients.All.SendAsync("SituationDeleted", new { id });
+            _ = _history.AppendAsync(new { type = "situation_delete", id });
+            return NoContent();
+        }
+
+        public class AddUnitDto { public Guid UnitId { get; set; } public bool AsLeadUnit { get; set; } }
+        public class RemoveUnitDto { public Guid UnitId { get; set; } }
+
+        [HttpPost("{id}/units/add")]
+        public IActionResult AddUnitToSituation(Guid id, [FromBody] AddUnitDto dto)
+        {
+            if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
+            
+            try
+            {
+                _situations.AddUnitToSituation(id, dto.UnitId, dto.AsLeadUnit);
+                var updatedSituation = _situations.GetSituation(id);
+                if (updatedSituation != null)
+                {
+                    _hub.Clients.All.SendAsync("SituationUpdated", updatedSituation);
+                    _ = _history.AppendAsync(new { type = "situation_add_unit", situationId = id, unitId = dto.UnitId, asLeadUnit = dto.AsLeadUnit });
+                }
+                return Ok();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("{id}/units/remove")]
+        public IActionResult RemoveUnitFromSituation(Guid id, [FromBody] RemoveUnitDto dto)
+        {
+            if (!CheckApiKey(Request, _options.Value.ApiKey)) return Unauthorized();
+            
+            _situations.RemoveUnitFromSituation(id, dto.UnitId);
+            var updatedSituation = _situations.GetSituation(id);
+            if (updatedSituation != null)
+            {
+                _hub.Clients.All.SendAsync("SituationUpdated", updatedSituation);
+                _ = _history.AppendAsync(new { type = "situation_remove_unit", situationId = id, unitId = dto.UnitId });
+            }
+            return Ok();
+        }
+
         public class PanicDto { public string Nick { get; set; } = string.Empty; public int Value { get; set; } } // 0 or 1
 
         [HttpPost("panic")]

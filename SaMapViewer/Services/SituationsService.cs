@@ -72,6 +72,14 @@ namespace SaMapViewer.Services
             }
         }
 
+        public void OpenSituation(Guid id)
+        {
+            if (_situations.TryGetValue(id, out var situation))
+            {
+                situation.IsActive = true;
+            }
+        }
+
         public void AddUnitToSituation(Guid situationId, Guid unitId, bool asLeadUnit = false)
         {
             if (!_situations.TryGetValue(situationId, out var situation))
